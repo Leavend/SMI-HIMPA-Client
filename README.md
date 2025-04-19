@@ -10,16 +10,15 @@
 ## Quick Start
 
 ```bash [Terminal]
-npx degit dianprata/nuxt-shadcn-dashboard my-dashboard-app
 cd my-dashboard-app
-pnpm i # If you don't have pnpm installed, run: npm install -g pnpm
+bun i # If you don't have bun installed, run: npm install -g bun
 ```
 
 ## Contributing
 
 1. Clone this repository.
-2. Install dependencies `pnpm install`.
-3. Use `pnpm run dev` to start dev server.
+2. Install dependencies `bun install`.
+3. Use `bun run dev` to start dev server.
 
 ## Credits
 
