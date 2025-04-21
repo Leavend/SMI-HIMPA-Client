@@ -40,9 +40,9 @@ const adminExtraMenu: NavMenu[] = [
         link: '/users',
       },
       {
-        title: 'Inventory',
+        title: 'Manage Inventory',
         icon: 'i-lucide-box',
-        link: '/dashboard/inventory',
+        link: '/inventories',
       },
       {
         title: 'Borrow Task',

@@ -44,7 +44,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: 'https://curly-space-robot-6x4475v6q6hr559-5000.app.github.dev/api',
+      apiBase: 'https://solid-umbrella-rx7pxwgrrjj2xr9w-5000.app.github.dev/api',
     },
   },
 

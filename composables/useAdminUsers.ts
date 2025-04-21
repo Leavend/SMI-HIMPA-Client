@@ -1,6 +1,5 @@
-import type { User } from '~/types/user'
+import type { User } from '~/components/users/data/schema'
 import { userSchema } from '@/components/users/data/schema'
-import { ref } from 'vue'
 import { z } from 'zod'
 import { Role } from '~/types/role'
 
@@ -26,15 +25,23 @@ export default function useAdminUsers() {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
+  const adminGuard = () => {
+    const token = useToken().value
+    if (!token)
+      throw new Error('Token tidak tersedia. Harap login ulang')
+
+    const decode = decodeJWT(token)
+    if (!decode || decode.role !== 'ADMIN')
+      throw new Error('Authorization Strict')
+  }
+
   const fetchUsers = async (forceFetch = false) => {
     loading.value = true
     error.value = null
 
     try {
+      adminGuard()
       const token = useToken().value
-      if (!token)
-        throw new Error('Token tidak tersedia. Harap login ulang.')
-
       const storedUsers = localStorage.getItem('users')
       if (storedUsers && !forceFetch) {
         try {
@@ -93,10 +100,8 @@ export default function useAdminUsers() {
   }
 
   const updateUserRole = async (userId: string, newRole: Role) => {
+    adminGuard()
     const token = useToken().value
-    if (!token)
-      throw new Error('Token tidak tersedia.')
-
     const { data, error } = await useFetch<UpdateRoleUserResponse>(useApiUrl('/admin/user/update-role'), {
       method: 'PUT',
       headers: {

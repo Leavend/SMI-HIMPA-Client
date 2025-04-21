@@ -1,4 +1,4 @@
-import type { User } from '~/types/user'
+import type { User } from '~/components/users/data/schema'
 
 interface RegisterResponse {
   status: boolean
