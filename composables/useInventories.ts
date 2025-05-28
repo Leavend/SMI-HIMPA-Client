@@ -15,6 +15,10 @@ export default function useInventories() {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
+  const CACHE_KEY = 'inventories'
+  const CACHE_TIMESTAMP_KEY = 'inventories_cache_timestamp'
+  const CACHE_DURATION_MS = 0.1 * 60 * 1000
+
   const fetchInventories = async (forceFetch = false) => {
     loading.value = true
     error.value = null
@@ -23,38 +27,36 @@ export default function useInventories() {
       const token = useToken().value
       if (!token)
         throw new Error('Authentication tidak tersedia. Harap login ulang.')
-      const storedInventories = localStorage.getItem('inventories')
-      if (storedInventories && !forceFetch) {
-        try {
-          const parsed = JSON.parse(storedInventories)
-          const validated = z.array(inventorySchema).safeParse(parsed)
 
-          if (validated.success) {
-            inventories.value = validated.data
-            return
-          }
-          else {
-            console.warn('Data cache tidak valid, fetch ulang dari server...')
-          }
-        }
-        catch (e) {
-          console.error('Gagal parsing data localStorage:', e)
+      // Step 1: Cek cache
+      const stored = localStorage.getItem(CACHE_KEY)
+      const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
+      const isValid = timestamp && Date.now() - Number(timestamp) < CACHE_DURATION_MS
+
+      if (stored && isValid && !forceFetch) {
+        const parsedCache = JSON.parse(stored)
+        const validated = z.array(inventorySchema).safeParse(parsedCache)
+        if (validated.success) {
+          inventories.value = validated.data
         }
       }
 
-      const { data, error: fetchError } = await useFetch<FetchInventoriesResponse>(useApiUrl('/inventory/inventories'), {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      // Step 2: Fetch tetap dilakukan
+      const { data, error: fetchError } = await useFetch<FetchInventoriesResponse>(
+        useApiUrl('/inventory/inventories'),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      })
+      )
 
       if (fetchError.value)
         throw new Error(fetchError.value.message)
 
       const inventoriesData = data.value?.data?.inventories
-      if (!inventoriesData) {
+      if (!inventoriesData)
         throw new Error('Data inventory tidak ditemukan di response server.')
-      }
 
       const parsed = z.array(inventorySchema).safeParse(inventoriesData)
       if (!parsed.success) {
@@ -63,18 +65,16 @@ export default function useInventories() {
       }
 
       inventories.value = parsed.data
-      localStorage.setItem('inventories', JSON.stringify(parsed.data))
+      localStorage.setItem(CACHE_KEY, JSON.stringify(parsed.data))
+      localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
     }
     catch (err: any) {
-      error.value = err.message || 'Gagal memuat data pengguna.'
+      error.value = err.message || 'Gagal memuat data inventory.'
     }
     finally {
       loading.value = false
     }
   }
-
-  // Auto fetch once when composable is used
-  fetchInventories()
 
   return {
     inventories,

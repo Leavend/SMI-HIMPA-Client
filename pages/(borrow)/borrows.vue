@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { columns } from '@/components/inventories/components/columns'
-import DataTable from '@/components/inventories/components/DataTable.vue'
+import { columns } from '@/components/borrows/components/columns'
+import DataTable from '@/components/borrows/components/DataTable.vue'
 import { toast } from 'vue-sonner'
 
 // Ambil composable
-const { inventories, loading, error, fetchInventories } = useInventories()
+const { borrows, loading, error, fetchBorrows } = useAdminBorrows()
 
 onMounted(async () => {
   const token = useToken().value
@@ -13,31 +13,31 @@ onMounted(async () => {
     return
   }
 
-  const storedInventories = localStorage.getItem('inventories')
-  if (storedInventories) {
+  const storedBorrows = localStorage.getItem('borrows')
+  if (storedBorrows) {
     try {
-      const parsed = JSON.parse(storedInventories)
+      const parsed = JSON.parse(storedBorrows)
 
       if (Array.isArray(parsed) && parsed.length > 0) {
-        inventories.value = parsed
+        borrows.value = parsed
         loading.value = false
-        toast.success('Data inventory berhasil dimuat dari cache.')
+        toast.success('Data borrow berhasil dimuat dari cache.')
       }
       else {
         throw new Error('Cache kosong atau tidak valid')
       }
     }
     catch (e) {
-      console.error('Error parsing inventories from localStorage:', e)
+      console.error('Error parsing borrows from localStorage:', e)
       toast.error('Terjadi kesalahan saat memuat data dari cache. Memuat data dari server...')
-      // Jika terjadi error saat parsing, panggil fetchInventories untuk mendapatkan data dari server
-      await fetchInventories(true) // forceFetch = true agar selalu mengambil data terbaru
+      // Jika terjadi error saat parsing, panggil fetchBorrows untuk mendapatkan data dari server
+      await fetchBorrows(true) // forceFetch = true agar selalu mengambil data terbaru
     }
   }
   else {
   // Jika tidak ada di localStorage, langsung fetch data
-    toast.info('Memuat data inventory dari server...')
-    await fetchInventories(true) // forceFetch = true agar selalu mengambil data terbaru
+    toast.info('Memuat data borrow dari server...')
+    await fetchBorrows(true) // forceFetch = true agar selalu mengambil data terbaru
   }
 })
 </script>
@@ -47,10 +47,10 @@ onMounted(async () => {
     <div class="flex flex-wrap items-end justify-between gap-2">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">
-          Inventories List
+          Borrows List
         </h2>
         <p class="text-muted-foreground">
-          Here's a list of all inventories.
+          Here's a list of all borrows.
         </p>
       </div>
     </div>
@@ -67,8 +67,8 @@ onMounted(async () => {
 
     <DataTable
       v-if="!loading && !error"
-      :key="inventories.length"
-      :data="inventories"
+      :key="borrows.length"
+      :data="borrows"
       :columns="columns"
       :loading="loading"
     />

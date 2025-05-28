@@ -9,16 +9,32 @@ export const navMenu: NavMenu[] = [
         icon: 'i-lucide-home',
         link: '/dashboard',
       },
-      {
-        title: 'Email',
-        icon: 'i-lucide-mail',
-        link: '/email',
-      },
+      // {
+      //   title: 'Email',
+      //   icon: 'i-lucide-mail',
+      //   link: '/email',
+      // },
     ],
   },
   {
     heading: 'Pages',
     items: [
+      {
+        title: 'Services',
+        icon: 'i-lucide-book',
+        children: [
+          {
+            title: 'Borrow',
+            icon: 'i-lucide-circle',
+            link: '/services/borrow',
+          },
+          {
+            title: 'Return',
+            icon: 'i-lucide-circle',
+            link: '/services/return',
+          },
+        ],
+      },
       {
         title: 'Settings',
         icon: 'i-lucide-settings',

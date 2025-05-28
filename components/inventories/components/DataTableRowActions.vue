@@ -15,9 +15,20 @@ const emit = defineEmits<{
   (e: 'refetch'): void
 }>()
 
-const inventory = computed(() => inventorySchema.parse(props.row.original))
-const { updateInventoryCondition } = useAdminInventories()
+const { fetchInventories } = useInventories()
+const { updateInventory, updateInventoryCondition } = useAdminInventories()
 const isLoading = ref(false)
+
+const inventory = computed(() => {
+  try {
+    return inventorySchema.parse(props.row.original)
+  }
+  catch (err) {
+    console.error('Error parsing inventory data:', err)
+    toast.error('Gagal memuat data inventaris.')
+    return {} as Inventory
+  }
+})
 
 const conditions = [
   { label: 'Available', value: 'Available' },
@@ -27,13 +38,47 @@ const conditions = [
   { label: 'Discontinued', value: 'Discontinued' },
 ]
 
-async function changeCondition(_inventory: Inventory, _newCondition: string) {
+const showEditModal = ref(false)
+const editedInventory = ref({
+  name: inventory.value.name,
+  quantity: inventory.value.quantity,
+  condition: inventory.value.condition,
+})
+
+async function handleUpdateInventory() {
+  try {
+    isLoading.value = true
+    await updateInventory({
+      inventoryId: inventory.value.inventoryId,
+      ...editedInventory.value,
+    })
+    toast.success(`Inventaris "${editedInventory.value.name}" berhasil diperbarui`)
+    emit('refetch')
+    showEditModal.value = false
+  }
+  catch (err: any) {
+    toast.error(err.message || 'Gagal memperbarui inventaris.')
+  }
+  finally {
+    isLoading.value = false
+  }
+}
+
+async function handleChangeCondition(_inventory: Inventory, _newCondition: string) {
   if (isLoading.value)
     return
 
   try {
     isLoading.value = true
-    await updateInventoryCondition(_inventory.inventoryId, _newCondition)
+
+    await updateInventoryCondition({
+      inventoryId: _inventory.inventoryId,
+      name: _inventory.name,
+      quantity: _inventory.quantity,
+      condition: _newCondition,
+    })
+    await fetchInventories()
+
     emit('refetch')
     toast.success(`Kondisi inventaris "${_inventory.name}" berhasil diubah ke "${_newCondition}"`)
   }
@@ -65,8 +110,13 @@ function deleteInventory(_inventory: Inventory) {
         <span class="sr-only">Open menu</span>
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" class="w-[180px]">
+    <DropdownMenuContent align="end" class="w-[200px]">
+      <DropdownMenuItem @click="() => showEditModal = true">
+        Edit Inventory
+      </DropdownMenuItem>
+
       <DropdownMenuSeparator />
+
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>Update Condition</DropdownMenuSubTrigger>
         <DropdownMenuSubContent>
@@ -76,7 +126,7 @@ function deleteInventory(_inventory: Inventory) {
               :key="cond.value"
               :value="cond.value"
               :disabled="isLoading"
-              @click="() => changeCondition(inventory, cond.value)"
+              @click="() => handleChangeCondition(inventory, cond.value)"
             >
               <div class="flex items-center gap-2">
                 <Loader2
@@ -89,11 +139,62 @@ function deleteInventory(_inventory: Inventory) {
           </DropdownMenuRadioGroup>
         </DropdownMenuSubContent>
       </DropdownMenuSub>
+
       <DropdownMenuSeparator />
+
       <DropdownMenuItem @click="() => deleteInventory(inventory)">
         Delete
         <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
+
+  <Dialog v-model:open="showEditModal">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Edit Inventory</DialogTitle>
+        <DialogDescription>
+          Perbarui informasi inventaris berikut.
+        </DialogDescription>
+      </DialogHeader>
+
+      <div class="flex flex-col gap-4">
+        <Input
+          v-model="editedInventory.name"
+          label="Name"
+          :disabled="isLoading"
+        />
+        <Input
+          v-model.number="editedInventory.quantity"
+          label="Quantity"
+          type="number"
+          :disabled="isLoading"
+        />
+        <Select v-model="editedInventory.condition" :disabled="isLoading">
+          <SelectTrigger class="w-full">
+            <SelectValue placeholder="Pilih kondisi" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="cond in conditions"
+              :key="cond.value"
+              :value="cond.value"
+            >
+              {{ cond.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <DialogFooter class="mt-4">
+        <Button variant="outline" @click="showEditModal = false">
+          Cancel
+        </Button>
+        <Button :disabled="isLoading" @click="handleUpdateInventory">
+          <Loader2 v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
+          Save
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>

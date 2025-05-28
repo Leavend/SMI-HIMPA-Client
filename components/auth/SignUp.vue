@@ -1,4 +1,3 @@
-// components/auth/SignUp.vue
 <script setup lang="ts">
 import { Loader2 } from 'lucide-vue-next'
 import PasswordInput from '~/components/PasswordInput.vue'

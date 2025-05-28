@@ -47,7 +47,7 @@ const adminExtraMenu: NavMenu[] = [
       {
         title: 'Borrow Task',
         icon: 'i-lucide-calendar-check-2',
-        link: '/tasks',
+        link: '/borrows',
         new: true,
       },
     ],

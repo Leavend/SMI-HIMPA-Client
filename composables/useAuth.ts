@@ -94,9 +94,7 @@ export function useAuth() {
       const { username, email, number, password, confirmPassword } = formData
 
       if (password !== confirmPassword) {
-        errorMessage.value = 'Password dan konfirmasi password tidak cocok'
-        isLoading.value = false
-        return
+        throw createError({ statusCode: 400, statusMessage: 'Password dan konfirmasi password tidak cocok' })
       }
 
       const { data: response, error } = await useFetch<RegisterResponse>(useApiUrl('/user/register'), {
@@ -112,14 +110,13 @@ export function useAuth() {
       if (error.value || !response.value?.status) {
         throw createError({
           statusCode: 400,
-          statusMessage: response.value?.message || 'Register gagal',
+          statusMessage: response.value?.message || 'Register failed',
         })
       }
-
-      await navigateTo('/login')
     }
     catch (e: any) {
       errorMessage.value = e?.statusMessage || 'Register failed'
+      throw e
     }
     finally {
       isLoading.value = false

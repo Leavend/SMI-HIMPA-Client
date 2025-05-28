@@ -7,9 +7,7 @@ definePageMeta({
 })
 
 const { register, isLoading } = useAuth()
-const router = useRouter()
 
-// Fungsi untuk menangani submit form registrasi
 async function handleRegister(data: {
   username: string
   email: string
@@ -17,28 +15,19 @@ async function handleRegister(data: {
   password: string
   confirmPassword: string
 }) {
-  // Memastikan password dan confirmPassword cocok
   if (data.password !== data.confirmPassword) {
     toast.error('Password and Confirm Password must match.')
-    return // Stop the registration process if passwords do not match
+    return
   }
 
   try {
-    // Memanggil fungsi register dari useAuth
     await register(data)
-
-    // Menampilkan pesan sukses menggunakan Sonner
     toast.success('Registrasi berhasil! Redirecting to login...')
-
-    // Menunggu beberapa detik sebelum pindah ke halaman login
-    setTimeout(() => {
-      router.push('/login') // Pindah ke halaman login
-    }, 2000) // Menunggu 2 detik
+    await new Promise(r => setTimeout(r, 1000))
+    await navigateTo('/login')
   }
   catch (error: any) {
-    // Memastikan error terdeteksi dan ditampilkan dengan Sonner
-    const errorMessage = error?.statusMessage || 'Register failed. Please try again later.'
-    toast.error(errorMessage)
+    toast.error(error?.statusMessage || error?.data?.message || 'Register failed. Please try again later.')
   }
 }
 </script>

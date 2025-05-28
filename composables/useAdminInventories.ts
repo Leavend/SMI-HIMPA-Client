@@ -43,7 +43,7 @@ export default function useAdminInventories() {
 
   const createInventory = async (formData: {
     name: string
-    quantity: string
+    quantity: number
     condition: string
     code: string
   }) => {
@@ -54,12 +54,8 @@ export default function useAdminInventories() {
       adminGuard()
 
       const token = useToken().value
-      // Validasi input dengan zod
-      const parsed = inventorySchema.safeParse(formData)
-      if (!parsed.success)
-        throw new Error(`Data inventaris tidak valid: ${parsed.error.message}`)
 
-      const { data, error: fetchError } = await useFetch<createInvetoryResponse>(
+      const { error: fetchError } = await useFetch<createInvetoryResponse>(
         useApiUrl('/admin/inventory'),
         {
           method: 'POST',
@@ -71,22 +67,15 @@ export default function useAdminInventories() {
         },
       )
 
-      if (fetchError.value)
-        throw new Error(fetchError.value.message)
-
-      const newInventory = data.value?.data?.inventory
-      if (!newInventory)
-        throw new Error('Inventaris baru tidak ditemukan di response.')
-
-      // Validasi ulang data hasil dari server
-      const validated = z.array(inventorySchema).safeParse(newInventory)
-      if (!validated.success)
-        throw new Error('Data inventaris dari server tidak valid.')
-
-      inventories.value = [...inventories.value, ...validated.data]
+      if (fetchError.value) {
+        const message = fetchError.value.data?.message || fetchError.value.message
+        throw new Error(message)
+      }
     }
     catch (err: any) {
-      error.value = err.message || 'Gagal membuat inventaris.'
+      const message = err?.message || 'Terjadi kesalahan saat membuat inventaris.'
+      error.value = message
+      throw new Error(message)
     }
     finally {
       loading.value = false
@@ -97,7 +86,7 @@ export default function useAdminInventories() {
     formData: {
       inventoryId: string
       name: string
-      quantity: string
+      quantity: number
       condition: string
     },
   ) => {
@@ -152,6 +141,8 @@ export default function useAdminInventories() {
   const updateInventoryCondition = async (
     formData: {
       inventoryId: string
+      name: string
+      quantity: number
       condition: string
     },
   ) => {
