@@ -12,10 +12,14 @@ const userId = computed(() => {
 })
 
 const errorMessage = computed(() => {
-  if (!error.value) return null
-  if (error.value instanceof Error) return error.value.message
-  if (typeof error.value === 'string') return error.value
-  if (error.value && typeof (error.value as any).message === 'string') return (error.value as any).message
+  if (!error.value)
+    return null
+  if (error.value instanceof Error)
+    return error.value.message
+  if (typeof error.value === 'string')
+    return error.value
+  if (error.value && typeof (error.value as any).message === 'string')
+    return (error.value as any).message
   return 'Tidak dapat memuat data.'
 })
 
@@ -28,8 +32,12 @@ async function loadReturns() {
 
   try {
     await fetchReturnsByUserId(userId.value)
-  } catch (err) {
-    // Error sudah ditangani oleh watch(error)
+  }
+  catch (err) {
+    console.error('Gagal memuat data pengembalian:', err)
+  }
+  finally {
+    loading.value = false
   }
 }
 
@@ -50,8 +58,6 @@ watch(error, (newError) => {
   if (newError) {
     const messageToDisplay = errorMessage.value || 'Terjadi kesalahan.'
     toast.error(messageToDisplay)
-
-    // Clear error agar tidak muncul toast berulang
     error.value = null
   }
 })
@@ -66,8 +72,8 @@ watch(error, (newError) => {
     <div v-else-if="errorMessage && !returns?.length" class="py-8 text-center text-red-500">
       <p>Terjadi kesalahan: {{ errorMessage }}</p>
       <button
+        class="mt-4 rounded bg-red-500 px-4 py-2 text-white transition hover:bg-red-600"
         @click="loadReturns"
-        class="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
       >
         Coba Lagi
       </button>
