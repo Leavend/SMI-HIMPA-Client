@@ -37,7 +37,18 @@ export const columns: ColumnDef<Return>[] = [
     header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Date Borrowed' }),
     cell: ({ row }) => {
       const date = new Date(row.getValue('dateBorrow'))
-      return h('span', { class: 'font-medium' }, date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }))
+      return h('span', { class: 'font-medium' }, date.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }))
+    },
+    filterFn: (row, _id, filterValue: string) => {
+      if (!filterValue)
+        return true
+      const rowDate = new Date(row.getValue('dateBorrow'))
+      const formatted = rowDate.toISOString().split('T')[0] // yyyy-mm-dd
+      return formatted === filterValue
     },
   },
   {
