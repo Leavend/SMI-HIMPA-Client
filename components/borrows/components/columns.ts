@@ -45,7 +45,7 @@ export const columns: ColumnDef<Borrow>[] = [
     header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Username' }),
     cell: ({ row }) => {
       const user = (row.original as Borrow).user
-      const username = user?.Username || 'Tidak ada user'
+      const username = user?.username || 'Tidak ada user'
       return h('span', { class: 'font-medium' }, username)
     },
   },

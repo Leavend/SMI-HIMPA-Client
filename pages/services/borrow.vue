@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
+import { computed, type ComputedRef } from 'vue'
 
 const route = useRoute()
 const { createBorrow, loading } = useBorrows()
 
 // Ambil itemId dari route params
-const itemId = computed(() => {
+const itemId: ComputedRef<string> = computed(() => {
   const id = route.params.id
-  return Array.isArray(id) ? id[0] : id
+  return Array.isArray(id) ? id[0] : id ?? ''
 })
 
 async function handleSubmit(payload: {

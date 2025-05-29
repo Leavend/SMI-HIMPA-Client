@@ -1,89 +1,86 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
-import { columns } from '@/components/returns/components/columns';
-import DataTable from '@/components/returns/components/DataTable.vue';
-import { toast } from 'vue-sonner'; // Make sure vue-sonner is correctly installed and configured
+import { columns } from '@/components/returns/components/columns'
+import DataTable from '@/components/returns/components/DataTable.vue'
+import { computed, onMounted, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
-// Assuming useReturns() and useAuthUser() are properly imported or globally available
-const { returns, loading, error, fetchReturnsByUserId } = useReturns();
-const authUserCookie = useAuthUser();
+const { returns, loading, error, fetchReturnsByUserId } = useReturns()
+const authUserCookie = useAuthUser()
 
-// Ambil userId dari data cookie auth-user
 const userId = computed(() => {
-  return authUserCookie.value?.userId || null;
-});
+  return authUserCookie.value?.userId || null
+})
 
-// Computed property for the error message (can still be used or modified)
 const errorMessage = computed(() => {
-  if (!error.value) {
-    return null;
-  }
+  if (!error.value) return null
+  if (error.value instanceof Error) return error.value.message
+  if (typeof error.value === 'string') return error.value
+  if (error.value && typeof (error.value as any).message === 'string') return (error.value as any).message
+  return 'Tidak dapat memuat data.'
+})
 
-  if (error.value instanceof Error) {
-    return error.value.message;
-  } else if (typeof error.value === 'string') {
-    return error.value;
-  } else if (error.value && typeof (error.value as any).message === 'string') {
-    return (error.value as any).message;
-  }
-  return 'Tidak dapat memuat data.';
-});
-
-// Fungsi untuk memuat data pengembalian
+// Fungsi memuat data pengembalian
 async function loadReturns() {
-  if (userId.value) {
-    // Reset error state before fetching
-    // error.value = null; // If your useReturns composable doesn't do this
-    await fetchReturnsByUserId(userId.value);
-  } else {
-    console.warn('No user ID found in auth-user cookie. Cannot fetch returns.');
-    // You might want to set an error or show a toast here as well
-    // error.value = "User not authenticated or ID not found.";
-    // toast.error("User not authenticated or ID not found.");
+  if (!userId.value) {
+    toast.error('User belum login atau ID tidak ditemukan.')
+    return
+  }
+
+  try {
+    await fetchReturnsByUserId(userId.value)
+  } catch (err) {
+    // Error sudah ditangani oleh watch(error)
   }
 }
 
 // Muat data saat komponen pertama kali dipasang
 onMounted(() => {
-  loadReturns();
-});
+  loadReturns()
+})
 
-// Perhatikan perubahan userId (dari cookie) dan muat ulang data jika userId berubah
+// Watch perubahan userId untuk reload data
 watch(userId, (newUserId, oldUserId) => {
   if (newUserId && newUserId !== oldUserId) {
-    loadReturns();
+    loadReturns()
   }
-}, { immediate: true });
+}, { immediate: true })
 
-// *** ADD THIS WATCHER FOR ERROR TOASTS ***
+// Watch error dan tampilkan toast
 watch(error, (newError) => {
   if (newError) {
-    const messageToDisplay = errorMessage.value || 'Terjadi kesalahan.'; // Use your computed errorMessage
-    toast.error(messageToDisplay); // Or toast.error(newError.message) or similar
+    const messageToDisplay = errorMessage.value || 'Terjadi kesalahan.'
+    toast.error(messageToDisplay)
 
-    // Optional: If you only want the toast and not the on-page error message,
-    // you might prevent the on-page message from showing or clear the error
-    // after toasting. However, having both can be fine.
+    // Clear error agar tidak muncul toast berulang
+    error.value = null
   }
-});
-
+})
 </script>
 
 <template>
   <ServicesLayout>
-    <div v-if="loading" class="text-center py-8">
+    <div v-if="loading" class="py-8 text-center">
       Memuat data pengembalian...
     </div>
-    <div v-else-if="errorMessage && !returns?.length" class="text-center py-8 text-red-500">
-      Terjadi kesalahan: {{ errorMessage }}
+
+    <div v-else-if="errorMessage && !returns?.length" class="py-8 text-center text-red-500">
+      <p>Terjadi kesalahan: {{ errorMessage }}</p>
+      <button
+        @click="loadReturns"
+        class="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+      >
+        Coba Lagi
+      </button>
     </div>
+
     <DataTable
       v-else-if="returns?.length"
       :data="returns"
       :columns="columns"
       :loading="loading"
     />
-    <div v-else-if="!loading && !errorMessage && !returns?.length" class="text-center py-8">
+
+    <div v-else class="py-8 text-center text-gray-500">
       Tidak ada data pengembalian.
     </div>
   </ServicesLayout>

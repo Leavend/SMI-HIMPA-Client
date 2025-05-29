@@ -1,21 +1,6 @@
 import { Icon } from '#components'
 import { h } from 'vue'
 
-export const labels = [
-  {
-    value: 'bug',
-    label: 'Bug',
-  },
-  {
-    value: 'feature',
-    label: 'Feature',
-  },
-  {
-    value: 'documentation',
-    label: 'Documentation',
-  },
-]
-
 export const conditions = [
   {
     value: 'Available',

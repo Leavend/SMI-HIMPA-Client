@@ -1,6 +1,5 @@
 import { z } from 'zod'
 
-// BorrowDetail schema (unchanged, but included here for completeness)
 export const borrowDetailSchema = z.object({
   borrowDetailId: z.string().uuid(),
   borrowId: z.string().uuid(),
@@ -9,18 +8,17 @@ export const borrowDetailSchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable(),
-  inventory: z.object({ // Add inventory details
+  inventory: z.object({
     inventoryId: z.string().uuid().optional(),
     name: z.string(),
   }).optional(),
 })
 
-// Borrow schema, including borrowDetails and user
 export const borrowSchema = z.object({
   borrowId: z.string(),
   quantity: z.coerce.number(),
   dateBorrow: z.string().datetime(),
-  dateReturn: z.string().datetime().nullable(), // Make sure this is nullable
+  dateReturn: z.string().datetime().nullable(),
   userId: z.string(),
   adminId: z.string(),
   createdAt: z.string().datetime(),
@@ -28,7 +26,7 @@ export const borrowSchema = z.object({
   deletedAt: z.string().datetime().nullable(),
   borrowDetails: z.array(borrowDetailSchema).optional(),
   user: z.object({
-    Username: z.string(),
+    username: z.string(),
   }).optional(),
 })
 

@@ -181,10 +181,8 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
           <FormControl>
             <SelectTrigger>
               <SelectValue placeholder="Select an item">
-                <span v-if="selectedItem">
-                  {{ selectedItem.name }} ({{ selectedItem.quantity }} available)
-                </span>
               </SelectValue>
+              <SelectValue placeholder="Select an item" />
             </SelectTrigger>
           </FormControl>
           <SelectContent>
@@ -196,7 +194,6 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
                 :disabled="item.condition !== 'Available'"
               >
                 <div class="flex items-center gap-2">
-                  <!-- Hanya tampilkan label sekali saja -->
                   <span>{{ getItemDisplayLabel(item) }}</span>
                 </div>
               </SelectItem>
