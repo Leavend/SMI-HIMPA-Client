@@ -1,12 +1,11 @@
 <script setup lang="ts">
+import { computed, type ComputedRef } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
-import { computed, type ComputedRef } from 'vue'
 
 const route = useRoute()
 const { createBorrow, loading } = useBorrows()
 
-// Ambil itemId dari route params
 const itemId: ComputedRef<string> = computed(() => {
   const id = route.params.id
   return Array.isArray(id) ? id[0] : id ?? ''
@@ -23,8 +22,7 @@ async function handleSubmit(payload: {
   loading.value = true
 
   try {
-    const result = await createBorrow(payload)
-
+    await createBorrow(payload)
     toast.success('Peminjaman Berhasil', {
       description: `Item ${payload.inventoryId} berhasil dipinjam`,
       action: {
