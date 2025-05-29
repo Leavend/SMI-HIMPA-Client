@@ -180,8 +180,7 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
         <Select v-bind="componentField" :disabled="props.isLoading || !inventories.length">
           <FormControl>
             <SelectTrigger>
-              <SelectValue placeholder="Select an item">
-              </SelectValue>
+              <SelectValue placeholder="Select an item" />
               <SelectValue placeholder="Select an item" />
             </SelectTrigger>
           </FormControl>

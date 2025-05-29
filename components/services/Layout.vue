@@ -23,7 +23,7 @@
       <!-- Content -->
       <div class="flex-1">
         <div class="space-y-6">
-          <div class="overflow-auto rounded-xl border border-gray-200 shadow-sm p-4 bg-white dark:bg-muted">
+          <div class="overflow-auto border border-gray-200 rounded-xl bg-white p-4 shadow-sm dark:bg-muted">
             <slot />
           </div>
         </div>
