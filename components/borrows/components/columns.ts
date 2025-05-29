@@ -92,6 +92,12 @@ export const columns: ColumnDef<Borrow>[] = [
     },
     enableSorting: true,
     enableHiding: false,
+    filterFn: (row, id, value) => {
+      const rawBorrowDetails = (row.original as Borrow & { borrowDetails?: BorrowDetail[] }).borrowDetails
+      const borrowDetails = Array.isArray(rawBorrowDetails) ? rawBorrowDetails : rawBorrowDetails ? [rawBorrowDetails] : []
+      const statuses = borrowDetails.map(detail => detail.status)
+      return statuses.some(status => value.includes(status))
+    },
   },
   {
     accessorKey: 'createdAt',

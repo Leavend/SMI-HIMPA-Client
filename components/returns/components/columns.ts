@@ -72,5 +72,10 @@ export const columns: ColumnDef<Return>[] = [
         ])
       }))
     },
+    enableSorting: true,
+    enableHiding: false,
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id))
+    },
   },
 ]
