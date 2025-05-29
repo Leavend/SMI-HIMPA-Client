@@ -74,8 +74,10 @@ export const columns: ColumnDef<Return>[] = [
     },
     enableSorting: true,
     enableHiding: false,
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
+    filterFn: (row, _id, value) => {
+      const borrowDetails = row.original.borrow?.borrowDetails || []
+      const statuses = borrowDetails.map((detail: BorrowDetail) => detail.status)
+      return statuses.some(status => value.includes(status))
     },
   },
 ]
