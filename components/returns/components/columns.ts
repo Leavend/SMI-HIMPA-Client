@@ -54,7 +54,7 @@ export const columns: ColumnDef<Return>[] = [
     cell: ({ row }) => h('span', { class: 'font-medium text-red-500 text-center block' }, row.getValue('lateDays')),
   },
   {
-    id: 'status',
+    accessorKey: 'status',
     header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Status' }),
     cell: ({ row }) => {
       const borrowDetails = row.original.borrow?.borrowDetails || []
@@ -74,10 +74,10 @@ export const columns: ColumnDef<Return>[] = [
     },
     enableSorting: true,
     enableHiding: false,
-    filterFn: (row, _id, value) => {
+    filterFn: (row, _id, filterValues: string[]) => {
       const borrowDetails = row.original.borrow?.borrowDetails || []
       const statuses = borrowDetails.map((detail: BorrowDetail) => detail.status)
-      return statuses.some(status => value.includes(status))
+      return statuses.some(status => filterValues.includes(status))
     },
   },
 ]
