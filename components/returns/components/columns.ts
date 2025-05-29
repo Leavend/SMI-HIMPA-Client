@@ -51,7 +51,7 @@ export const columns: ColumnDef<Return>[] = [
   {
     accessorKey: 'lateDays',
     header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Late Days' }),
-    cell: ({ row }) => h('span', { class: 'font-medium' }, row.getValue('lateDays')),
+    cell: ({ row }) => h('span', { class: 'font-medium text-red-500 text-center block' }, row.getValue('lateDays')),
   },
   {
     id: 'status',
