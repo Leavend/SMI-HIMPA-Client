@@ -33,6 +33,8 @@ export default defineNuxtConfig({
 
   routeRules: {
     '/components': { redirect: '/components/accordion' },
+    '/services': { redirect: '/services/borrow' },
+    // '/services': { redirect: '/services/return' },
     '/settings': { redirect: '/settings/profile' },
   },
 
@@ -44,9 +46,9 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: 'https://solid-umbrella-rx7pxwgrrjj2xr9w-5000.app.github.dev/api',
+      // apiBase: 'https://solid-umbrella-rx7pxwgrrjj2xr9w-5000.app.github.dev/api',
+      apiBase: 'http://localhost:5000/api',
     },
   },
-
   compatibilityDate: '2025-12-14',
 })
