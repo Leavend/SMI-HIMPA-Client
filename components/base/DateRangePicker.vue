@@ -1,20 +1,25 @@
 <script setup lang="ts">
 import type { DateRange } from 'radix-vue'
 import type { Ref } from 'vue'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+
+import { RangeCalendar } from '@/components/ui/range-calendar'
 import { cn } from '@/lib/utils'
 
-import { CalendarDate, DateFormatter, getLocalTimeZone } from '@internationalized/date'
+import { DateFormatter, getLocalTimeZone, today } from '@internationalized/date'
 import { Calendar as CalendarIcon } from 'lucide-vue-next'
+import { ref } from 'vue'
 
 const df = new DateFormatter('en-US', {
   dateStyle: 'medium',
 })
 
-const calendarDate = new CalendarDate(2024, 0, 20)
+const now = today(getLocalTimeZone())
 
 const value = ref({
-  start: calendarDate,
-  end: calendarDate.add({ days: 20 }),
+  start: now,
+  end: now.add({ days: 20 }),
 }) as Ref<DateRange>
 </script>
 
@@ -26,17 +31,16 @@ const value = ref({
           id="date"
           variant="outline"
           :class="cn(
-            'justify-start text-left font-normal',
-            !value && 'text-muted-foreground',
+            'w-full justify-start text-left font-normal',
+            !value?.start && 'text-muted-foreground',
           )"
         >
           <CalendarIcon class="mr-2 h-4 w-4" />
 
-          <template v-if="value.start">
+          <template v-if="value?.start">
             <template v-if="value.end">
               {{ df.format(value.start.toDate(getLocalTimeZone())) }} - {{ df.format(value.end.toDate(getLocalTimeZone())) }}
             </template>
-
             <template v-else>
               {{ df.format(value.start.toDate(getLocalTimeZone())) }}
             </template>
@@ -52,8 +56,8 @@ const value = ref({
           weekday-format="short"
           :number-of-months="2"
           initial-focus
-          :placeholder="value.start"
-          @update:start-value="(startDate: any) => value.start = startDate"
+          :placeholder="now" @update:model-value="(updatedValue: DateRange | undefined) => {
+          }"
         />
       </PopoverContent>
     </Popover>
