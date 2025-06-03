@@ -46,8 +46,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      // apiBase: 'https://solid-umbrella-rx7pxwgrrjj2xr9w-5000.app.github.dev/api',
-      apiBase: 'http://localhost:5000/api',
+      apiBase: 'https://solid-umbrella-rx7pxwgrrjj2xr9w-5000.app.github.dev/api',
+      // apiBase: 'http://localhost:5000/api',
     },
   },
   compatibilityDate: '2025-12-14',
