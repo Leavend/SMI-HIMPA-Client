@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@pinia/nuxt',
     '@nuxtjs/color-mode',
+    '@nuxthub/core',
   ],
 
   css: [
@@ -46,8 +47,9 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: 'https://solid-umbrella-rx7pxwgrrjj2xr9w-5000.app.github.dev/api',
-      // apiBase: 'http://localhost:5000/api',
+      // apiBase: 'https://solid-umbrella-rx7pxwgrrjj2xr9w-5000.app.github.dev/api',
+      // apiBase: 'https://hhhpoltek.sgp.dom.my.id/api',
+      apiBase: 'http://170.64.137.197:5123/api',
     },
   },
   compatibilityDate: '2025-12-14',
