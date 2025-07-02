@@ -49,17 +49,17 @@ onMounted(async () => {
     <div class="flex flex-wrap items-end justify-between gap-2">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">
-          Users List
+          Daftar Pengguna
         </h2>
         <p class="text-muted-foreground">
-          Here's a list of all users.
+          Berikut adalah daftar semua pengguna.
         </p>
       </div>
     </div>
 
     <!-- Menampilkan pesan loading saat data sedang dimuat -->
     <div v-if="loading">
-      <p>Loading...</p>
+      <p>Memuat...</p>
     </div>
 
     <!-- Menampilkan pesan error jika ada masalah dengan pengambilan data -->

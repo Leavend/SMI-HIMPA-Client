@@ -16,18 +16,18 @@ async function handleRegister(data: {
   confirmPassword: string
 }) {
   if (data.password !== data.confirmPassword) {
-    toast.error('Password and Confirm Password must match.')
+    toast.error('Password dan Konfirmasi Password harus sama.')
     return
   }
 
   try {
     await register(data)
-    toast.success('Registrasi berhasil! Redirecting to login...')
+    toast.success('Registrasi berhasil! Mengalihkan ke halaman login...')
     await new Promise(r => setTimeout(r, 1000))
     await navigateTo('/login')
   }
   catch (error: any) {
-    toast.error(error?.statusMessage || error?.data?.message || 'Register failed. Please try again later.')
+    toast.error(error?.statusMessage || error?.data?.message || 'Registrasi gagal. Silakan coba lagi nanti.')
   }
 }
 </script>
@@ -46,9 +46,9 @@ async function handleRegister(data: {
         <Card>
           <CardHeader class="text-center">
             <CardTitle class="text-xl">
-              Create an account
+              Buat akun baru
             </CardTitle>
-            <CardDescription>Register with your credentials</CardDescription>
+            <CardDescription>Daftar dengan kredensial Anda</CardDescription>
           </CardHeader>
           <CardContent>
             <AuthSignUp :is-loading="isLoading" @submit="handleRegister" />
@@ -56,9 +56,9 @@ async function handleRegister(data: {
         </Card>
 
         <p class="text-center text-sm text-muted-foreground">
-          Already have an account?
+          Sudah punya akun?
           <NuxtLink to="/login" class="underline underline-offset-4 hover:text-primary">
-            Login
+            Masuk
           </NuxtLink>
         </p>
       </div>

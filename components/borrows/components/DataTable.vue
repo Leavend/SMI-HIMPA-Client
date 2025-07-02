@@ -80,7 +80,7 @@ const table = useVueTable({
                 :key="column.id"
                 class="h-24 text-center"
               >
-                Loading...
+                Memuat...
               </TableCell>
             </TableRow>
           </template>
@@ -104,7 +104,7 @@ const table = useVueTable({
               :colspan="columns.length"
               class="h-24 text-center"
             >
-              No results.
+              Tidak ada hasil.
             </TableCell>
           </TableRow>
         </TableBody>

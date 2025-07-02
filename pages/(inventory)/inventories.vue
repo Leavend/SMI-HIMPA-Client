@@ -21,7 +21,7 @@ onMounted(async () => {
       if (Array.isArray(parsed) && parsed.length > 0) {
         inventories.value = parsed
         loading.value = false
-        toast.success('Data inventory berhasil dimuat dari cache.')
+        toast.success('Data inventaris berhasil dimuat dari cache.')
       }
       else {
         throw new Error('Cache kosong atau tidak valid')
@@ -36,7 +36,7 @@ onMounted(async () => {
   }
   else {
   // Jika tidak ada di localStorage, langsung fetch data
-    toast.info('Memuat data inventory dari server...')
+    toast.info('Memuat data inventaris dari server...')
     await fetchInventories(true) // forceFetch = true agar selalu mengambil data terbaru
   }
 })
@@ -47,16 +47,16 @@ onMounted(async () => {
     <div class="flex flex-wrap items-end justify-between gap-2">
       <div>
         <h2 class="text-2xl font-bold tracking-tight">
-          Inventories List
+          Daftar Inventaris
         </h2>
         <p class="text-muted-foreground">
-          Here's a list of all inventories.
+          Berikut adalah daftar semua inventaris.
         </p>
       </div>
     </div>
 
     <div v-if="loading">
-      <p>Loading...</p>
+      <p>Memuat...</p>
     </div>
 
     <div v-if="error">

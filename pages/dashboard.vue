@@ -66,22 +66,22 @@ const user = useAuthUser()
   <div class="w-full flex flex-col gap-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <h2 class="text-2xl font-bold tracking-tight">
-        Dashboard
+        Dasbor
       </h2>
       <div class="flex items-center space-x-2">
         <BaseDateRangePicker />
-        <Button>Download</Button>
+        <Button>Unduh</Button>
       </div>
     </div>
     <main class="flex flex-1 flex-col gap-4 md:gap-8">
       <div v-if="!user">
-        <p>Loading...</p>
+        <p>Memuat...</p>
       </div>
       <div v-else class="grid gap-4 lg:grid-cols-4 md:grid-cols-2 md:gap-8">
         <Card>
           <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
-              Total Revenue
+              Total Pendapatan
             </CardTitle>
             <DollarSign class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -98,14 +98,14 @@ const user = useAuthUser()
                 prefix="+"
                 :format="{ style: 'percent', minimumFractionDigits: 1 }"
               />
-              from last month
+              dari bulan lalu
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
-              Subscriptions
+              Langganan
             </CardTitle>
             <Users class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -121,14 +121,14 @@ const user = useAuthUser()
                 :value="dataCard.subscriptionsDesc"
                 prefix="+"
                 :format="{ style: 'percent', minimumFractionDigits: 1 }"
-              /> from last month
+              /> dari bulan lalu
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
-              Sales
+              Penjualan
             </CardTitle>
             <CreditCard class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -144,14 +144,14 @@ const user = useAuthUser()
                 :value="dataCard.salesDesc"
                 prefix="+"
                 :format="{ style: 'percent', minimumFractionDigits: 1 }"
-              /> from last month
+              /> dari bulan lalu
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
-              Active Now
+              Aktif Sekarang
             </CardTitle>
             <Activity class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -166,7 +166,7 @@ const user = useAuthUser()
               <NumberFlow
                 :value="dataCard.activeNowDesc"
                 prefix="+"
-              /> since last hour
+              /> sejak jam terakhir
             </p>
           </CardContent>
         </Card>
@@ -174,7 +174,7 @@ const user = useAuthUser()
       <div class="grid gap-4 lg:grid-cols-2 xl:grid-cols-3 md:gap-8">
         <Card class="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Overview</CardTitle>
+            <CardTitle>Ringkasan</CardTitle>
           </CardHeader>
           <CardContent class="pl-2">
             <DashboardOverview />
@@ -182,7 +182,7 @@ const user = useAuthUser()
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Recent Sales</CardTitle>
+            <CardTitle>Penjualan Terbaru</CardTitle>
           </CardHeader>
           <CardContent class="grid gap-8">
             <div

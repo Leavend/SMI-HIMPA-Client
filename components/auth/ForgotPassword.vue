@@ -28,7 +28,7 @@ function onSubmit(event: Event) {
         <Input
           id="email"
           v-model="email"
-          placeholder="name@example.com"
+          placeholder="nama@contoh.com"
           type="email"
           auto-capitalize="none"
           auto-complete="email"
@@ -40,7 +40,7 @@ function onSubmit(event: Event) {
       <template v-if="props.resetSent">
         <NuxtLink to="/reset-password">
           <Button type="button" class="w-full">
-            Go to Reset Password
+            Pergi ke Reset Password
           </Button>
         </NuxtLink>
       </template>
@@ -48,7 +48,7 @@ function onSubmit(event: Event) {
       <template v-else>
         <Button :disabled="props.isLoading">
           <Loader2 v-if="props.isLoading" class="mr-2 h-4 w-4 animate-spin" />
-          Send Reset Link
+          Kirim Link Reset
         </Button>
       </template>
     </div>

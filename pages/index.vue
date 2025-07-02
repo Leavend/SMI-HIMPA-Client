@@ -12,17 +12,17 @@ definePageMeta({
         <Icon name="mdi:rocket-launch" class="text-primary" size="64" />
       </div>
       <h1 class="text-4xl font-extrabold">
-        Welcome to Himpa Web
+        Selamat Datang di Aplikasi HIMPA
       </h1>
       <p class="text-lg text-muted-foreground">
-        Kickstart your management inventory with our modern and intuitive dashboard.
+        Mulai kelola inventaris Anda dengan dashboard modern dan intuitif kami.
       </p>
       <div class="space-y-2">
         <NuxtLink
           to="/login"
           class="inline-block rounded-lg bg-primary px-6 py-2 text-white transition hover:bg-primary/90"
         >
-          Login to Get Started
+          Masuk untuk Memulai
         </NuxtLink>
       </div>
     </div>

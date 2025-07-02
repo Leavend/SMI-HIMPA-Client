@@ -85,7 +85,7 @@ const table = useVueTable({
               :colspan="columns.length"
               class="h-24 text-center"
             >
-              No results.
+              Tidak ada hasil.
             </TableCell>
           </TableRow>
         </TableBody>

@@ -26,14 +26,14 @@ async function handleResetPassword({
   errorMessage.value = ''
 
   if (!password || password !== confirmPassword) {
-    errorMessage.value = 'Passwords do not match'
-    toast.error('Passwords do not match') // Menampilkan error notification
+    errorMessage.value = 'Password tidak cocok'
+    toast.error('Password tidak cocok') // Menampilkan error notification
     return
   }
 
   if (!email || !code) {
-    errorMessage.value = 'Email and code are required'
-    toast.error('Email and code are required') // Menampilkan error notification
+    errorMessage.value = 'Email dan kode diperlukan'
+    toast.error('Email dan kode diperlukan') // Menampilkan error notification
     return
   }
 
@@ -41,10 +41,10 @@ async function handleResetPassword({
   try {
     await resetPassword(email, code, password)
     isSuccess.value = true
-    toast.success('Password has been reset successfully!') // Menampilkan success notification
+    toast.success('Password berhasil direset!') // Menampilkan success notification
   }
   catch (error: any) {
-    errorMessage.value = error?.message || 'Failed to reset password'
+    errorMessage.value = error?.message || 'Gagal reset password'
     toast.error(errorMessage.value) // Menampilkan error notification
   }
   finally {
@@ -69,7 +69,7 @@ async function handleResetPassword({
             Reset Password
           </CardTitle>
           <CardDescription>
-            Enter a new password to reset your account
+            Masukkan password baru untuk reset akun Anda
           </CardDescription>
         </CardHeader>
 

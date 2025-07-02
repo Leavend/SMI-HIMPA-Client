@@ -21,10 +21,10 @@ async function handleForgotPassword({ email }: { email: string }) {
   try {
     await forgotPassword(email)
     resetSent.value = true
-    toast.success('Reset password link has been sent to your email.')
+    toast.success('Link reset password telah dikirim ke email Anda.')
   }
   catch (error: any) {
-    errorMessage.value = error?.message || 'Something went wrong'
+    errorMessage.value = error?.message || 'Terjadi kesalahan'
     toast.error(errorMessage.value) // Menampilkan notifikasi error
   }
   finally {
@@ -45,10 +45,10 @@ async function handleForgotPassword({ email }: { email: string }) {
       <Card>
         <CardHeader class="text-center">
           <CardTitle class="text-xl">
-            Forgot Password
+            Lupa Password
           </CardTitle>
           <CardDescription>
-            Enter your email below to reset your password
+            Masukkan email Anda di bawah untuk reset password
           </CardDescription>
         </CardHeader>
         <CardContent>

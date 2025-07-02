@@ -25,11 +25,11 @@ const columns = computed(() => props.table.getAllColumns()
         class="ml-auto hidden h-8 lg:flex"
       >
         <Icon name="i-radix-icons-mixer-horizontal" class="mr-2 h-4 w-4" />
-        View
+        Tampilan
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" class="w-[150px]">
-      <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+      <DropdownMenuLabel>Toggle kolom</DropdownMenuLabel>
       <DropdownMenuSeparator />
 
       <DropdownMenuCheckboxItem

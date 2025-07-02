@@ -25,7 +25,7 @@ function onSubmit(event: Event) {
 
 <template>
   <form class="grid gap-6" @submit="onSubmit">
-    <Separator label="continue with" />
+    <Separator label="lanjutkan dengan" />
 
     <div class="grid gap-2">
       <Label for="username">Username</Label>
@@ -33,7 +33,7 @@ function onSubmit(event: Event) {
         id="username"
         v-model="username"
         type="text"
-        placeholder="Enter your username"
+        placeholder="Masukkan username Anda"
         :disabled="props.isLoading"
         autocomplete="username"
         autocapitalize="none"
@@ -48,7 +48,7 @@ function onSubmit(event: Event) {
           to="/forgot-password"
           class="ml-auto inline-block text-sm underline"
         >
-          Forgot your password?
+          Lupa password?
         </NuxtLink>
       </div>
       <PasswordInput
@@ -60,14 +60,14 @@ function onSubmit(event: Event) {
 
     <Button type="submit" class="w-full" :disabled="props.isLoading">
       <Loader2 v-if="props.isLoading" class="mr-2 h-4 w-4 animate-spin" />
-      <span v-else>Login</span>
+      <span v-else>Masuk</span>
     </Button>
   </form>
 
   <div class="mt-4 text-center text-sm text-muted-foreground">
-    Don't have an account?
+    Belum punya akun?
     <NuxtLink to="/register" class="underline">
-      Sign up
+      Daftar
     </NuxtLink>
   </div>
 </template>

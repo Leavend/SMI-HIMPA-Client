@@ -45,7 +45,7 @@ function onSubmit(event: Event) {
         id="username"
         v-model="username"
         type="text"
-        placeholder="Enter your username"
+        placeholder="Masukkan username Anda"
         :disabled="props.isLoading"
         autocomplete="username"
         autocapitalize="none"
@@ -59,7 +59,7 @@ function onSubmit(event: Event) {
         id="email"
         v-model="email"
         type="email"
-        placeholder="name@example.com"
+        placeholder="nama@contoh.com"
         :disabled="props.isLoading"
         autocomplete="email"
         autocapitalize="none"
@@ -90,7 +90,7 @@ function onSubmit(event: Event) {
     </div>
 
     <div class="grid gap-2">
-      <Label for="confirm-password">Confirm Password</Label>
+      <Label for="confirm-password">Konfirmasi Password</Label>
       <PasswordInput
         id="confirm-password"
         v-model="confirmPassword"
@@ -100,7 +100,7 @@ function onSubmit(event: Event) {
 
     <Button type="submit" class="w-full" :disabled="props.isLoading">
       <Loader2 v-if="props.isLoading" class="mr-2 h-4 w-4 animate-spin" />
-      <span v-else>Register</span>
+      <span v-else>Daftar</span>
     </Button>
   </form>
 </template>

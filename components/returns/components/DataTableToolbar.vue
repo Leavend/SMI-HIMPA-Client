@@ -50,7 +50,7 @@ function clearDateBorrowFilter() {
         @click="clearDateBorrowFilter"
       >
         <Icon name="i-radix-icons-cross-1" class="mr-1 h-4 w-4" />
-        Clear Filter
+        Hapus Filter
       </Button>
 
       <DataTableFacetedFilter
@@ -65,7 +65,7 @@ function clearDateBorrowFilter() {
           class="h-8 px-2 lg:px-3"
           @click="table.resetColumnFilters()"
         >
-          Reset
+          Atur Ulang
           <Icon name="i-radix-icons-cross-2" class="ml-2 h-4 w-4" />
         </Button>
       </DataTableFacetedFilter>

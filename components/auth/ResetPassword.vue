@@ -37,7 +37,7 @@ function onSubmit(event: Event) {
       <Input
         id="email"
         v-model="email"
-        placeholder="name@example.com"
+        placeholder="nama@contoh.com"
         type="email"
         auto-capitalize="none"
         auto-complete="email"
@@ -47,36 +47,36 @@ function onSubmit(event: Event) {
     </div>
 
     <div class="grid gap-2">
-      <Label for="code">Reset code</Label>
+      <Label for="code">Kode reset</Label>
       <Input
         id="code"
         v-model="code"
-        placeholder="Enter the code from your email"
+        placeholder="Masukkan kode dari email Anda"
         type="text"
         :disabled="props.isLoading || props.resetSent"
       />
       <p class="text-xs text-muted-foreground">
-        We’ve sent a reset code to your email. Please check your inbox (or spam folder).
+        Kami telah mengirim kode reset ke email Anda. Silakan cek inbox (atau folder spam).
       </p>
     </div>
 
     <div class="grid gap-2">
-      <Label for="password">New Password</Label>
+      <Label for="password">Password Baru</Label>
       <Input
         id="password"
         v-model="password"
-        placeholder="Enter new password"
+        placeholder="Masukkan password baru"
         type="password"
         :disabled="props.isLoading || props.resetSent"
       />
     </div>
 
     <div class="grid gap-2">
-      <Label for="confirmPassword">Confirm Password</Label>
+      <Label for="confirmPassword">Konfirmasi Password</Label>
       <Input
         id="confirmPassword"
         v-model="confirmPassword"
-        placeholder="Confirm new password"
+        placeholder="Konfirmasi password baru"
         type="password"
         :disabled="props.isLoading || props.resetSent"
       />
@@ -85,7 +85,7 @@ function onSubmit(event: Event) {
     <Button type="submit" :disabled="props.isLoading || props.resetSent">
       <Loader2 v-if="props.isLoading" class="mr-2 h-4 w-4 animate-spin" />
       <span v-if="!props.resetSent">Reset Password</span>
-      <span v-else>Success! Go to Login</span>
+      <span v-else>Berhasil! Pergi ke Login</span>
     </Button>
   </form>
 </template>

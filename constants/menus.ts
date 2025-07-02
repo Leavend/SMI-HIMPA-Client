@@ -2,10 +2,10 @@ import type { NavMenu, NavMenuItems } from '~/types/nav'
 
 export const navMenu: NavMenu[] = [
   {
-    heading: 'General',
+    heading: 'Umum',
     items: [
       {
-        title: 'Home',
+        title: 'Beranda',
         icon: 'i-lucide-home',
         link: '/dashboard',
       },
@@ -17,19 +17,19 @@ export const navMenu: NavMenu[] = [
     ],
   },
   {
-    heading: 'Pages',
+    heading: 'Halaman',
     items: [
       {
-        title: 'Services',
+        title: 'Layanan',
         icon: 'i-lucide-book',
         children: [
           {
-            title: 'Borrow',
+            title: 'Pinjam',
             icon: 'i-lucide-circle',
             link: '/services/borrow',
           },
           {
-            title: 'Return',
+            title: 'Kembalikan',
             icon: 'i-lucide-circle',
             link: '/services/return',
           },
@@ -73,7 +73,7 @@ export const navMenu: NavMenu[] = [
 
 export const navMenuBottom: NavMenuItems = [
   {
-    title: 'About',
+    title: 'Tentang',
     icon: 'i-lucide-circle-help',
     link: '/',
   },

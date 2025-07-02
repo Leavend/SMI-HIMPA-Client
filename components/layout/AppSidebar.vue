@@ -22,30 +22,30 @@ const user = computed(() => {
   }
 
   return {
-    username: 'Unknown',
-    email: 'No email',
+    username: 'Tidak Diketahui',
+    email: 'Tidak ada email',
     avatar: '/avatars/avatartion.png',
-    role: 'Unknown', // Ensure default role exists
+    role: 'Tidak Diketahui', // Ensure default role exists
   }
 })
 
 // Admin-specific menu
 const adminExtraMenu: NavMenu[] = [
   {
-    heading: 'Admin Panel',
+    heading: 'Panel Admin',
     items: [
       {
-        title: 'Manage Users',
+        title: 'Kelola Pengguna',
         icon: 'i-lucide-users',
         link: '/users',
       },
       {
-        title: 'Manage Inventory',
+        title: 'Kelola Inventaris',
         icon: 'i-lucide-box',
         link: '/inventories',
       },
       {
-        title: 'Borrow Task',
+        title: 'Tugas Peminjaman',
         icon: 'i-lucide-calendar-check-2',
         link: '/borrows',
         new: true,

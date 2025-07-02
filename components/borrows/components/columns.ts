@@ -14,13 +14,13 @@ export const columns: ColumnDef<Borrow>[] = [
     header: ({ table }) => h(Checkbox, {
       'checked': table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate'),
       'onUpdate:checked': value => table.toggleAllPageRowsSelected(!!value),
-      'ariaLabel': 'Select all',
+      'ariaLabel': 'Pilih semua',
       'class': 'translate-y-0.5',
     }),
     cell: ({ row }) => h(Checkbox, {
       'checked': row.getIsSelected(),
       'onUpdate:checked': value => row.toggleSelected(!!value),
-      'ariaLabel': 'Select row',
+      'ariaLabel': 'Pilih baris',
       'class': 'translate-y-0.5',
     }),
     enableSorting: false,
@@ -28,7 +28,7 @@ export const columns: ColumnDef<Borrow>[] = [
   },
   {
     accessorKey: 'inventoryName',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Inventory Name' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Nama Inventaris' }),
     cell: ({ row }) => {
       const rawBorrowDetails = (row.original as Borrow & { borrowDetails?: BorrowDetail[] }).borrowDetails
       const borrowDetails = Array.isArray(rawBorrowDetails)
@@ -51,12 +51,12 @@ export const columns: ColumnDef<Borrow>[] = [
   },
   {
     accessorKey: 'quantity',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Quantity' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Jumlah' }),
     cell: ({ row }) => h('span', { class: 'font-medium' }, row.getValue('quantity')),
   },
   {
     accessorKey: 'dateBorrow',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Date Borrowed' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Tanggal Pinjam' }),
     cell: ({ row }) => {
       const date = new Date(row.getValue('dateBorrow'))
       return h('span', { class: 'font-medium' }, date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }))
@@ -64,7 +64,7 @@ export const columns: ColumnDef<Borrow>[] = [
   },
   {
     accessorKey: 'dateReturn',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Date Returned' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Tanggal Kembali' }),
     cell: ({ row }) => {
       const date = new Date(row.getValue('dateReturn'))
       return h('span', { class: 'font-medium' }, date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }))
@@ -101,7 +101,7 @@ export const columns: ColumnDef<Borrow>[] = [
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Created At' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Dibuat Pada' }),
     cell: ({ row }) => {
       const date = new Date(row.getValue('createdAt'))
       return h('span', { class: 'font-medium' }, date.toLocaleString('id-ID', {

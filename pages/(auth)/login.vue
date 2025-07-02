@@ -14,12 +14,12 @@ async function handleLogin({ username, password }: { username: string, password:
 
   try {
     await login(username, password)
-    toast.success('Login successful!')
+    toast.success('Login berhasil!')
     await new Promise(r => setTimeout(r, 1000))
     await navigateTo('/dashboard')
   }
   catch (e: any) {
-    toast.error(e?.statusMessage || e?.data?.message || 'Login failed')
+    toast.error(e?.statusMessage || e?.data?.message || 'Login gagal')
   }
   finally {
     isLoading.value = false
@@ -40,10 +40,10 @@ async function handleLogin({ username, password }: { username: string, password:
       <Card>
         <CardHeader class="text-center">
           <CardTitle class="text-xl">
-            Welcome back
+            Selamat datang kembali
           </CardTitle>
           <CardDescription>
-            Login with your Username & Password
+            Masuk dengan Username & Password Anda
           </CardDescription>
         </CardHeader>
 
