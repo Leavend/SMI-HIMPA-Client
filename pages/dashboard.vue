@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { Activity, BookOpen, Package, Users, Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-vue-next'
+import useAdminBorrows from '~/composables/useAdminBorrows'
+import useAdminInventories from '~/composables/useAdminInventories'
+import useAdminUsers from '~/composables/useAdminUsers'
+import { useAuthUser } from '@/composables/useAuthUser'
+import { decodeJWT } from '~/utils/jwt'
 
 // Get user data
 const user = useAuthUser()
@@ -67,7 +72,7 @@ const recentActivities = computed(() => {
 const topInventories = computed(() => {
   if (!borrows.value || !inventories.value) return []
   
-  const inventoryBorrowCounts = {}
+  const inventoryBorrowCounts: Record<string, number> = {}
   borrows.value.forEach(borrow => {
     const borrowDetails = Array.isArray(borrow.borrowDetails) 
       ? borrow.borrowDetails 
@@ -102,7 +107,7 @@ const userStats = computed(() => {
     topBorrowerCount: 0,
   }
   
-  const userBorrowCounts = {}
+  const userBorrowCounts: Record<string, number> = {}
   borrows.value.forEach(borrow => {
     const userName = borrow.user?.username
     if (userName) {
@@ -128,8 +133,21 @@ const userStats = computed(() => {
 const loading = computed(() => borrowsLoading.value || inventoriesLoading.value || usersLoading.value)
 const error = computed(() => borrowsError.value || inventoriesError.value || usersError.value)
 
+// Function to reload all dashboard data
+const loadDashboardData = async () => {
+  try {
+    await Promise.all([
+      fetchBorrows(true),
+      fetchInventories(true),
+      fetchUsers(true)
+    ])
+  } catch (err) {
+    console.error('Error loading dashboard data:', err)
+  }
+}
+
 // Get activity icon based on type
-function getActivityIcon(type) {
+function getActivityIcon(type: string) {
   switch (type) {
     case 'borrow':
       return BookOpen
@@ -143,7 +161,7 @@ function getActivityIcon(type) {
 }
 
 // Get activity color based on status
-function getActivityColor(status) {
+function getActivityColor(status: string) {
   switch (status) {
     case 'success':
       return 'text-green-600'
@@ -156,11 +174,26 @@ function getActivityColor(status) {
   }
 }
 
+// Auto-refresh data every 30 seconds for real-time updates
+let refreshInterval: NodeJS.Timeout | null = null
+
 onMounted(() => {
   // Load data from all composables
-  fetchBorrows(true)
-  fetchInventories(true)
-  fetchUsers(true)
+  loadDashboardData()
+  
+  // Set up auto-refresh for real-time updates
+  refreshInterval = setInterval(() => {
+    if (!loading.value) {
+      loadDashboardData()
+    }
+  }, 30000) // 30 seconds
+})
+
+onUnmounted(() => {
+  // Clean up interval when component is unmounted
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+  }
 })
 
 definePageMeta({

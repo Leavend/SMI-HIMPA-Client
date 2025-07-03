@@ -1,4 +1,4 @@
-import type { Inventory } from '~/components/inventories/data/schema'
+import type { Inventory } from '@/components/inventories/data/schema'
 import { inventorySchema } from '@/components/inventories/data/schema' // Pastikan path ini benar
 import { useApiUrl } from '@/composables/useApiUrl' // Pastikan composable ini ada
 import { useToken } from '@/composables/useToken' // Pastikan composable ini ada
@@ -42,52 +42,20 @@ const CACHE_TIMESTAMP_KEY = 'admin_inventories_cache_timestamp'
 const CACHE_DURATION_MS = 5 * 60 * 1000 // 5 menit (sesuaikan jika perlu)
 
 // --- Fungsi Helper Error Message ---
-function getErrorMessage(err: any, defaultMessage: string): string {
-  if (typeof err === 'string' && err.length > 0)
-    return err
-
-  if (err instanceof Error) {
-    const msg = err.message.toLowerCase()
-    if (msg.includes('login terlebih dahulu') || msg.includes('token tidak tersedia'))
-      return 'Harap login terlebih dahulu.'
-    if (msg.includes('authorization strict') || msg.includes('unauthorized') || msg.includes('forbidden'))
-      return 'Anda tidak memiliki izin untuk tindakan ini.'
-    if (msg.includes('tidak ditemukan') || msg.includes('not found'))
-      return 'Data yang diminta tidak ditemukan.'
-    if (msg.includes('tidak valid') || msg.includes('validation error'))
-      return 'Data tidak valid atau format salah.'
-    if (msg.includes('failed to fetch') || msg.includes('err_connection_refused'))
-      return 'Gagal terhubung ke server. Periksa koneksi Anda.'
-    if (msg.includes('404'))
-      return 'Sumber daya tidak ditemukan (404).'
-    if (msg.includes('500'))
-      return 'Terjadi kesalahan internal pada server (500).'
-    return err.message || defaultMessage
-  }
-
+function getErrorMessage(err: unknown, defaultMessage: string): string {
+  if (typeof err === 'string' && err.length > 0) return err;
+  if (err instanceof Error) return err.message || defaultMessage;
   if (err && typeof err === 'object') {
-    const dataMsg = err.data?.message || err.data?.error
-    const statusMsg = err.statusMessage
-    const directMsg = err.message
-
-    if (typeof dataMsg === 'string' && dataMsg.length > 0)
-      return dataMsg
-    if (typeof statusMsg === 'string' && statusMsg.length > 0)
-      return statusMsg
-    if (typeof directMsg === 'string' && directMsg.length > 0)
-      return directMsg
-
-    if (err.statusCode) {
-      if (err.statusCode === 404)
-        return 'Sumber daya tidak ditemukan (404).'
-      if (err.statusCode === 401 || err.statusCode === 403)
-        return 'Anda tidak memiliki izin (401/403).'
-      return `Terjadi kesalahan server (Kode: ${err.statusCode}).`
-    }
+    // @ts-ignore
+    return err.message || defaultMessage;
   }
-  return defaultMessage
+  return defaultMessage;
 }
 
+/**
+ * Composable untuk manajemen data inventaris (khusus admin).
+ * @returns inventories, loading, error, fetchInventories
+ */
 export default function useAdminInventories() {
   const inventories = ref<Inventory[]>([])
   const loading = ref(false)
@@ -104,7 +72,7 @@ export default function useAdminInventories() {
   }
 
   // --- Fungsi Fetch Inventories ---
-  const fetchInventories = async (forceFetch = false) => {
+  const fetchInventories = async (forceFetch = false): Promise<void> => {
     loading.value = true
     error.value = null
 
@@ -346,10 +314,10 @@ export default function useAdminInventories() {
   }
 
   return {
-    inventories,
-    loading,
-    error,
-    fetchInventories, // Tambahkan ini ke return
+    inventories: readonly(inventories),
+    loading: readonly(loading),
+    error: readonly(error),
+    fetchInventories,
     createInventory,
     updateInventory,
     updateInventoryCondition,
