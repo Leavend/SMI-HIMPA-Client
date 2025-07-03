@@ -1,106 +1,132 @@
 <script setup lang="ts">
 import { Activity, BookOpen, Package, Users, Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-vue-next'
 
-// Data untuk dashboard
-const dashboardData = ref({
-  totalInventories: 0,
-  totalUsers: 0,
-  activeBorrows: 0,
-  pendingReturns: 0,
-  todayBorrows: 0,
-  overdueItems: 0,
-  completedReturns: 0,
-  totalBorrows: 0,
-})
-
-// Data untuk grafik dan statistik
-const recentActivities = ref([])
-const topInventories = ref([])
-const userStats = ref({})
-
-// Loading state
-const loading = ref(true)
-
 // Get user data
 const user = useAuthUser()
 
-// Fetch dashboard data
-async function fetchDashboardData() {
-  loading.value = true
-  try {
-    // Simulasi data - dalam implementasi nyata ini akan mengambil dari API
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    dashboardData.value = {
-      totalInventories: 156,
-      totalUsers: 89,
-      activeBorrows: 23,
-      pendingReturns: 8,
-      todayBorrows: 5,
-      overdueItems: 3,
-      completedReturns: 45,
-      totalBorrows: 234,
-    }
+// Use existing composables for real data
+const { borrows, loading: borrowsLoading, error: borrowsError, fetchBorrows } = useAdminBorrows()
+const { inventories, loading: inventoriesLoading, error: inventoriesError, fetchInventories } = useAdminInventories()
+const { users, loading: usersLoading, error: usersError, fetchUsers } = useAdminUsers()
 
-    // Recent activities
-    recentActivities.value = [
-      {
-        id: 1,
-        type: 'borrow',
-        user: 'Ahmad Fadillah',
-        item: 'Laptop Dell Latitude',
-        time: '2 jam yang lalu',
-        status: 'success'
-      },
-      {
-        id: 2,
-        type: 'return',
-        user: 'Siti Nurhaliza',
-        item: 'Proyektor Epson',
-        time: '4 jam yang lalu',
-        status: 'success'
-      },
-      {
-        id: 3,
-        type: 'borrow',
-        user: 'Budi Santoso',
-        item: 'Kamera Canon EOS',
-        time: '6 jam yang lalu',
-        status: 'pending'
-      },
-      {
-        id: 4,
-        type: 'overdue',
-        user: 'Dewi Sartika',
-        item: 'Tablet iPad',
-        time: '1 hari yang lalu',
-        status: 'warning'
-      }
-    ]
-
-    // Top inventories
-    topInventories.value = [
-      { name: 'Laptop Dell Latitude', borrows: 45, available: 8 },
-      { name: 'Proyektor Epson', borrows: 32, available: 5 },
-      { name: 'Kamera Canon EOS', borrows: 28, available: 3 },
-      { name: 'Tablet iPad', borrows: 25, available: 6 },
-      { name: 'Speaker JBL', borrows: 22, available: 4 }
-    ]
-
-    // User statistics
-    userStats.value = {
-      totalActive: 67,
-      newThisMonth: 12,
-      topBorrower: 'Ahmad Fadillah',
-      topBorrowerCount: 15
-    }
-
-  } catch (error) {
-    console.error('Error fetching dashboard data:', error)
-  } finally {
-    loading.value = false
+// Computed dashboard data
+const dashboardData = computed(() => {
+  const today = new Date().toISOString().split('T')[0]
+  
+  return {
+    totalInventories: inventories.value?.length || 0,
+    totalUsers: users.value?.length || 0,
+    activeBorrows: borrows.value?.filter(b => b.status === 'ACTIVE').length || 0,
+    pendingReturns: borrows.value?.filter(b => b.status === 'PENDING').length || 0,
+    todayBorrows: borrows.value?.filter(b => b.dateBorrow?.startsWith(today)).length || 0,
+    overdueItems: borrows.value?.filter(b => {
+      if (b.status !== 'ACTIVE') return false
+      const returnDate = new Date(b.dateReturn)
+      return returnDate < new Date()
+    }).length || 0,
+    completedReturns: borrows.value?.filter(b => b.status === 'RETURNED').length || 0,
+    totalBorrows: borrows.value?.length || 0,
   }
-}
+})
+
+const recentActivities = computed(() => {
+  if (!borrows.value) return []
+  
+  const recentBorrows = borrows.value
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5)
+
+  return recentBorrows.map(borrow => {
+    const borrowDetails = Array.isArray(borrow.borrowDetails) 
+      ? borrow.borrowDetails 
+      : borrow.borrowDetails ? [borrow.borrowDetails] : []
+    
+    const itemName = borrowDetails[0]?.inventory?.name || 'Item tidak diketahui'
+    const userName = borrow.user?.username || 'Pengguna tidak diketahui'
+    
+    const timeDiff = Date.now() - new Date(borrow.createdAt).getTime()
+    const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60))
+    const timeText = hoursAgo < 1 ? 'Baru saja' : 
+                    hoursAgo < 24 ? `${hoursAgo} jam yang lalu` : 
+                    `${Math.floor(hoursAgo / 24)} hari yang lalu`
+
+    return {
+      id: borrow.borrowId,
+      type: borrow.status === 'RETURNED' ? 'return' : 
+            borrow.status === 'ACTIVE' && new Date(borrow.dateReturn) < new Date() ? 'overdue' : 'borrow',
+      user: userName,
+      item: itemName,
+      time: timeText,
+      status: borrow.status === 'RETURNED' ? 'success' : 
+              borrow.status === 'PENDING' ? 'pending' : 
+              borrow.status === 'ACTIVE' && new Date(borrow.dateReturn) < new Date() ? 'warning' : 'success'
+    }
+  })
+})
+
+const topInventories = computed(() => {
+  if (!borrows.value || !inventories.value) return []
+  
+  const inventoryBorrowCounts = {}
+  borrows.value.forEach(borrow => {
+    const borrowDetails = Array.isArray(borrow.borrowDetails) 
+      ? borrow.borrowDetails 
+      : borrow.borrowDetails ? [borrow.borrowDetails] : []
+    
+    borrowDetails.forEach(detail => {
+      const inventoryName = detail.inventory?.name
+      if (inventoryName) {
+        inventoryBorrowCounts[inventoryName] = (inventoryBorrowCounts[inventoryName] || 0) + 1
+      }
+    })
+  })
+
+  return Object.entries(inventoryBorrowCounts)
+    .map(([name, count]) => {
+      const inventory = inventories.value.find(inv => inv.name === name)
+      return {
+        name,
+        borrows: count,
+        available: inventory?.quantity || 0
+      }
+    })
+    .sort((a, b) => b.borrows - a.borrows)
+    .slice(0, 5)
+})
+
+const userStats = computed(() => {
+  if (!borrows.value || !users.value) return {
+    totalActive: 0,
+    newThisMonth: 0,
+    topBorrower: '',
+    topBorrowerCount: 0,
+  }
+  
+  const userBorrowCounts = {}
+  borrows.value.forEach(borrow => {
+    const userName = borrow.user?.username
+    if (userName) {
+      userBorrowCounts[userName] = (userBorrowCounts[userName] || 0) + 1
+    }
+  })
+
+  const topBorrower = Object.entries(userBorrowCounts)
+    .sort(([,a], [,b]) => b - a)[0]
+
+  return {
+    totalActive: users.value.filter(u => u.role !== 'ADMIN').length,
+    newThisMonth: users.value.filter(u => {
+      const userDate = new Date(u.createdAt)
+      const now = new Date()
+      return userDate.getMonth() === now.getMonth() && userDate.getFullYear() === now.getFullYear()
+    }).length,
+    topBorrower: topBorrower?.[0] || 'Tidak ada data',
+    topBorrowerCount: topBorrower?.[1] || 0
+  }
+})
+
+const loading = computed(() => borrowsLoading.value || inventoriesLoading.value || usersLoading.value)
+const error = computed(() => borrowsError.value || inventoriesError.value || usersError.value)
 
 // Get activity icon based on type
 function getActivityIcon(type) {
@@ -131,7 +157,10 @@ function getActivityColor(status) {
 }
 
 onMounted(() => {
-  fetchDashboardData()
+  // Load data from all composables
+  fetchBorrows(true)
+  fetchInventories(true)
+  fetchUsers(true)
 })
 
 definePageMeta({
@@ -161,8 +190,19 @@ definePageMeta({
       </div>
     </div>
 
+    <!-- Error State -->
+    <div v-if="error" class="flex items-center justify-center py-12">
+      <div class="flex flex-col items-center gap-4">
+        <AlertCircle class="h-8 w-8 text-red-500" />
+        <p class="text-red-500">{{ error }}</p>
+        <Button @click="loadDashboardData" variant="outline">
+          Coba Lagi
+        </Button>
+      </div>
+    </div>
+
     <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-12">
+    <div v-else-if="loading" class="flex items-center justify-center py-12">
       <div class="flex flex-col items-center gap-4">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <p class="text-muted-foreground">Memuat data dashboard...</p>
@@ -308,7 +348,10 @@ definePageMeta({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div class="space-y-4">
+            <div v-if="recentActivities.length === 0" class="text-center py-8 text-muted-foreground">
+              Belum ada aktivitas
+            </div>
+            <div v-else class="space-y-4">
               <div
                 v-for="activity in recentActivities"
                 :key="activity.id"
@@ -346,19 +389,19 @@ definePageMeta({
             </CardDescription>
           </CardHeader>
           <CardContent class="space-y-3">
-            <Button class="w-full justify-start" variant="outline">
+            <Button class="w-full justify-start" variant="outline" @click="navigateTo('/services/borrow')">
               <BookOpen class="h-4 w-4 mr-2" />
               Pinjam Inventaris
             </Button>
-            <Button class="w-full justify-start" variant="outline">
+            <Button class="w-full justify-start" variant="outline" @click="navigateTo('/services/return')">
               <CheckCircle class="h-4 w-4 mr-2" />
               Kembalikan Item
             </Button>
-            <Button class="w-full justify-start" variant="outline">
+            <Button class="w-full justify-start" variant="outline" @click="navigateTo('/borrows')">
               <Clock class="h-4 w-4 mr-2" />
               Riwayat Peminjaman
             </Button>
-            <Button class="w-full justify-start" variant="outline">
+            <Button class="w-full justify-start" variant="outline" @click="navigateTo('/inventories')">
               <Package class="h-4 w-4 mr-2" />
               Lihat Inventaris
             </Button>
@@ -374,19 +417,19 @@ definePageMeta({
             </CardDescription>
           </CardHeader>
           <CardContent class="space-y-3">
-            <Button class="w-full justify-start" variant="outline">
+            <Button class="w-full justify-start" variant="outline" @click="navigateTo('/users')">
               <Users class="h-4 w-4 mr-2" />
               Kelola Pengguna
             </Button>
-            <Button class="w-full justify-start" variant="outline">
+            <Button class="w-full justify-start" variant="outline" @click="navigateTo('/inventories')">
               <Package class="h-4 w-4 mr-2" />
               Kelola Inventaris
             </Button>
-            <Button class="w-full justify-start" variant="outline">
+            <Button class="w-full justify-start" variant="outline" @click="navigateTo('/borrows')">
               <BookOpen class="h-4 w-4 mr-2" />
               Kelola Peminjaman
             </Button>
-            <Button class="w-full justify-start" variant="outline">
+            <Button class="w-full justify-start" variant="outline" @click="navigateTo('/returns')">
               <AlertCircle class="h-4 w-4 mr-2" />
               Lihat Terlambat
             </Button>
@@ -402,7 +445,10 @@ definePageMeta({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div class="space-y-4">
+            <div v-if="topInventories.length === 0" class="text-center py-8 text-muted-foreground">
+              Belum ada data inventaris
+            </div>
+            <div v-else class="space-y-4">
               <div
                 v-for="(item, index) in topInventories"
                 :key="index"
