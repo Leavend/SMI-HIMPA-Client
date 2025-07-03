@@ -129,7 +129,7 @@ export default function useAdminInventories() {
       }
 
       const { data, error: fetchError } = await useFetch<FetchInventoriesResponse>(
-        useApiUrl('/admin/inventories'), // Endpoint untuk mengambil semua inventory (admin)
+        useApiUrl('/inventories'), // Endpoint untuk mengambil semua inventory (admin)
         {
           headers: { Authorization: `Bearer ${token}` },
           cache: 'no-cache',
