@@ -15,7 +15,7 @@ useHead({
     { key: 'theme-color', name: 'theme-color', content: color },
   ],
   link: [
-    { rel: 'icon', href: '/favicon.ico' },
+    { rel: 'icon', type: 'image/svg+xml', href: '/1.svg' },
   ],
   htmlAttrs: {
     lang: 'en',

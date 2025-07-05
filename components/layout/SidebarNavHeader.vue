@@ -25,7 +25,7 @@ const roleIcon = computed(() => {
         class="cursor-default"
       >
         <div class="aspect-square size-8 flex items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-          <Icon :name="roleIcon" class="size-4" />
+          <img src="/constants/1.svg" alt="Logo HIMPA" class="size-6" />
         </div>
         <div class="grid flex-1 text-left text-sm leading-tight">
           <span class="truncate font-semibold">Himpa</span>
