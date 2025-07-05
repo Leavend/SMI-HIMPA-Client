@@ -15,7 +15,7 @@ onMounted(async () => {
   }
 
   // Mengecek apakah data pengguna sudah ada di localStorage
-  const storedUsers = localStorage.getItem('users')
+  const storedUsers = localStorage.getItem('admin_users')
   if (storedUsers) {
     try {
       const parsed = JSON.parse(storedUsers)

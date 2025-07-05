@@ -13,7 +13,7 @@ onMounted(async () => {
     return
   }
 
-  const storedBorrows = localStorage.getItem('borrows')
+  const storedBorrows = localStorage.getItem('admin_borrows')
   if (storedBorrows) {
     try {
       const parsed = JSON.parse(storedBorrows)
