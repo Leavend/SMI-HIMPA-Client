@@ -42,14 +42,71 @@ const CACHE_TIMESTAMP_KEY = 'admin_inventories_cache_timestamp'
 const CACHE_DURATION_MS = 5 * 60 * 1000 // 5 menit (sesuaikan jika perlu)
 
 // --- Fungsi Helper Error Message ---
-function getErrorMessage(err: unknown, defaultMessage: string): string {
-  if (typeof err === 'string' && err.length > 0) return err;
-  if (err instanceof Error) return err.message || defaultMessage;
-  if (err && typeof err === 'object') {
-    // @ts-ignore
-    return err.message || defaultMessage;
+function getErrorMessage(err: any, defaultMessage: string): string {
+  if (typeof err === 'string' && err.length > 0) {
+    // Jika error message mengandung URL, gunakan default message
+    if (err.includes('http') || err.includes('api')) {
+      return defaultMessage
+    }
+    return err
   }
-  return defaultMessage;
+
+  if (err instanceof Error) {
+    const msg = err.message.toLowerCase()
+    // Jika error message mengandung URL, gunakan default message
+    if (msg.includes('http') || msg.includes('api')) {
+      return defaultMessage
+    }
+    if (msg.includes('login terlebih dahulu') || msg.includes('token tidak tersedia'))
+      return 'Harap login terlebih dahulu.'
+    if (msg.includes('authorization strict') || msg.includes('unauthorized') || msg.includes('forbidden'))
+      return 'Anda tidak memiliki izin untuk tindakan ini.'
+    if (msg.includes('tidak ditemukan') || msg.includes('not found'))
+      return 'Data yang diminta tidak ditemukan.'
+    if (msg.includes('tidak valid') || msg.includes('validation error'))
+      return 'Data tidak valid atau format salah.'
+    if (msg.includes('failed to fetch') || msg.includes('err_connection_refused'))
+      return 'Gagal terhubung ke server. Periksa koneksi Anda.'
+    if (msg.includes('404'))
+      return 'Sumber daya tidak ditemukan (404).'
+    if (msg.includes('500'))
+      return 'Terjadi kesalahan internal pada server (500).'
+    return err.message || defaultMessage
+  }
+
+  if (err && typeof err === 'object') {
+    const dataMsg = err.data?.message || err.data?.error
+    const statusMsg = err.statusMessage
+    const directMsg = err.message
+
+    if (typeof dataMsg === 'string' && dataMsg.length > 0) {
+      if (dataMsg.includes('http') || dataMsg.includes('api')) {
+        return defaultMessage
+      }
+      return dataMsg
+    }
+    if (typeof statusMsg === 'string' && statusMsg.length > 0) {
+      if (statusMsg.includes('http') || statusMsg.includes('api')) {
+        return defaultMessage
+      }
+      return statusMsg
+    }
+    if (typeof directMsg === 'string' && directMsg.length > 0) {
+      if (directMsg.includes('http') || directMsg.includes('api')) {
+        return defaultMessage
+      }
+      return directMsg
+    }
+
+    if (err.statusCode) {
+      if (err.statusCode === 404)
+        return 'Sumber daya tidak ditemukan (404).'
+      if (err.statusCode === 401 || err.statusCode === 403)
+        return 'Anda tidak memiliki izin (401/403).'
+      return `Terjadi kesalahan server (Kode: ${err.statusCode}).`
+    }
+  }
+  return defaultMessage
 }
 
 /**
@@ -96,26 +153,22 @@ export default function useAdminInventories() {
         }
       }
 
-      const { data, error: fetchError } = await useFetch<FetchInventoriesResponse>(
-        useApiUrl('/inventory/inventories'), // Endpoint untuk mengambil semua inventory (admin)
+      const data = await $fetch<FetchInventoriesResponse>(
+        useApiUrl('/inventory/inventories'),
         {
           headers: { Authorization: `Bearer ${token}` },
-          cache: 'no-cache',
         },
       )
 
-      if (fetchError.value)
-        throw fetchError.value
-
-      const inventoriesData = data.value?.data?.inventories
-      if (!data.value?.status || !inventoriesData) {
-        throw new Error(data.value?.message || 'Data inventaris tidak ditemukan di respons server.')
+      const inventoriesData = data?.data?.inventories
+      if (!data?.status || !inventoriesData) {
+        throw new Error(data?.message || 'Data inventaris tidak ditemukan di respons server.')
       }
 
       const parsed = z.array(inventorySchema).safeParse(inventoriesData)
       if (!parsed.success) {
         console.error('Zod validation error (admin inventories):', parsed.error.flatten())
-        throw new Error('Data inventaris dari server tidak valid.')
+        throw new Error('Data dari server tidak valid.')
       }
 
       inventories.value = parsed.data
@@ -226,26 +279,22 @@ export default function useAdminInventories() {
         throw new Error('Tidak ada data yang akan diupdate.')
       }
 
-      const { data, error: fetchError } = await useFetch<UpdateInventoryGeneralResponse>(
+      const data = await $fetch<UpdateInventoryGeneralResponse>(
         useApiUrl(`/admin/inventory/${inventoryId}`),
         {
           method: 'PUT',
           headers: { Authorization: `Bearer ${token}` },
           body: parsedPayload.data,
-          cache: 'no-cache',
         },
       )
 
-      if (fetchError.value)
-        throw fetchError.value
-
-      if (!data.value?.status) {
-        throw new Error(data.value?.message || 'Gagal memperbarui inventaris.')
+      if (!data?.status) {
+        throw new Error(data?.message || 'Gagal memperbarui inventaris.')
       }
 
       // Setelah berhasil, fetch ulang semua inventories
       await fetchInventories(true)
-      return data.value.data // Mengembalikan EmptyDataObject
+      return data.data // Mengembalikan EmptyDataObject
     }
     catch (err: any) {
       const friendlyError = getErrorMessage(err, 'Gagal memperbarui inventaris.')
@@ -280,7 +329,7 @@ export default function useAdminInventories() {
         throw new Error(`Kondisi tidak valid: ${parsedPayload.error.flatten().fieldErrors}`)
       }
 
-      const { data, error: fetchError } = await useFetch<UpdateInventoryGeneralResponse>(
+      const data = await $fetch<UpdateInventoryGeneralResponse>(
         useApiUrl(`/admin/inventory/condition/${inventoryId}`), // Asumsi endpoint berbeda untuk kondisi
         // Jika endpoint sama dengan updateInventory, gunakan PUT ke /admin/inventory/${inventoryId}
         // dan body: { condition: newCondition }
@@ -288,20 +337,16 @@ export default function useAdminInventories() {
           method: 'PATCH', // Atau PUT, sesuaikan dengan API Anda
           headers: { Authorization: `Bearer ${token}` },
           body: parsedPayload.data, // Kirim { condition: "VALID_CONDITION" }
-          cache: 'no-cache',
         },
       )
 
-      if (fetchError.value)
-        throw fetchError.value
-
-      if (!data.value?.status) {
-        throw new Error(data.value?.message || 'Gagal memperbarui kondisi inventaris.')
+      if (!data?.status) {
+        throw new Error(data?.message || 'Gagal memperbarui kondisi inventaris.')
       }
 
       // Setelah berhasil, fetch ulang semua inventories
       await fetchInventories(true)
-      return data.value.data // Mengembalikan EmptyDataObject
+      return data.data // Mengembalikan EmptyDataObject
     }
     catch (err: any) {
       const friendlyError = getErrorMessage(err, 'Gagal memperbarui kondisi inventaris.')

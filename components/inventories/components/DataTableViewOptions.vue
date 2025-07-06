@@ -29,7 +29,7 @@ const columns = computed(() => props.table.getAllColumns()
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" class="w-[150px]">
-      <DropdownMenuLabel>Toggle kolom</DropdownMenuLabel>
+      <DropdownMenuLabel>Tampilkan kolom</DropdownMenuLabel>
       <DropdownMenuSeparator />
 
       <DropdownMenuCheckboxItem

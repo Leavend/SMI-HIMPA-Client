@@ -10,11 +10,11 @@ const route = useRoute()
 
 const sidebarNavItems: Item[] = [
   {
-    title: 'Borrow',
+    title: 'Pinjam',
     href: '/services/borrow',
   },
   {
-    title: 'Return',
+    title: 'Kembali',
     href: '/services/return',
   },
 ]

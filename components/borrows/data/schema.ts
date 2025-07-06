@@ -7,7 +7,7 @@ export const borrowDetailSchema = z.object({
   status: z.string(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable(),
+  deletedAt: z.string().datetime().nullable().optional(),
   inventory: z.object({
     inventoryId: z.string().uuid().optional(),
     name: z.string(),
@@ -23,7 +23,7 @@ export const borrowSchema = z.object({
   adminId: z.string(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable(),
+  deletedAt: z.string().datetime().nullable().optional(),
   borrowDetails: z.array(borrowDetailSchema).optional(),
   user: z.object({
     username: z.string(),

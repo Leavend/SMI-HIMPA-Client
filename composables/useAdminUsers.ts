@@ -28,11 +28,20 @@ const CACHE_DURATION_MS = 5 * 60 * 1000 // 5 menit (sesuaikan jika perlu)
 
 // --- Fungsi Helper Error Message ---
 function getErrorMessage(err: any, defaultMessage: string): string {
-  if (typeof err === 'string' && err.length > 0)
+  if (typeof err === 'string' && err.length > 0) {
+    // Jika error message mengandung URL, gunakan default message
+    if (err.includes('http') || err.includes('api')) {
+      return defaultMessage
+    }
     return err
+  }
 
   if (err instanceof Error) {
     const msg = err.message.toLowerCase()
+    // Jika error message mengandung URL, gunakan default message
+    if (msg.includes('http') || msg.includes('api')) {
+      return defaultMessage
+    }
     if (msg.includes('login terlebih dahulu') || msg.includes('token tidak tersedia'))
       return 'Harap login terlebih dahulu.'
     if (msg.includes('authorization strict') || msg.includes('unauthorized') || msg.includes('forbidden'))
@@ -55,12 +64,24 @@ function getErrorMessage(err: any, defaultMessage: string): string {
     const statusMsg = err.statusMessage
     const directMsg = err.message
 
-    if (typeof dataMsg === 'string' && dataMsg.length > 0)
+    if (typeof dataMsg === 'string' && dataMsg.length > 0) {
+      if (dataMsg.includes('http') || dataMsg.includes('api')) {
+        return defaultMessage
+      }
       return dataMsg
-    if (typeof statusMsg === 'string' && statusMsg.length > 0)
+    }
+    if (typeof statusMsg === 'string' && statusMsg.length > 0) {
+      if (statusMsg.includes('http') || statusMsg.includes('api')) {
+        return defaultMessage
+      }
       return statusMsg
-    if (typeof directMsg === 'string' && directMsg.length > 0)
+    }
+    if (typeof directMsg === 'string' && directMsg.length > 0) {
+      if (directMsg.includes('http') || directMsg.includes('api')) {
+        return defaultMessage
+      }
       return directMsg
+    }
 
     if (err.statusCode) {
       if (err.statusCode === 404)
@@ -125,24 +146,20 @@ export default function useAdminUsers() {
       }
 
       // Jika forceFetch true, atau cache tidak valid/tidak ada, ambil dari server
-      const { data, error: fetchError } = await useFetch<FetchUsersResponse>(
+      const data = await $fetch<FetchUsersResponse>(
         useApiUrl('/admin/users'),
         {
           headers: { Authorization: `Bearer ${token}` },
-          cache: 'no-cache',
         },
       )
 
-      if (fetchError.value)
-        throw fetchError.value // Dilempar untuk ditangani oleh getErrorMessage
-
-      const usersData = data.value?.data?.users
-      if (!data.value?.status || !usersData) {
-        throw new Error(data.value?.message || 'Data pengguna tidak ditemukan di respons server.')
+      const usersData = data?.data?.users
+      if (!data?.status || !usersData) {
+        throw new Error(data?.message || 'Data pengguna tidak ditemukan di respons server.')
       }
 
       // Normalisasi data dari server
-      const normalizedUsers = usersData.map(user => ({
+      const normalizedUsers = usersData.map((user: any) => ({
         ...user,
         role: Role[user.role as keyof typeof Role] || Role.BORROWER, // Normalisasi peran
         password: user.password || '', // Pastikan password ada, meskipun mungkin tidak seharusnya dikirim ke klien
@@ -180,24 +197,19 @@ export default function useAdminUsers() {
         throw new Error('User ID atau peran baru tidak valid.')
       }
 
-      const { data, error: fetchError } = await useFetch<UpdateRoleUserResponse>(
-        useApiUrl('/admin/user/update-role'), // Pastikan endpoint ini benar
+      const data = await $fetch<UpdateRoleUserResponse>(
+        useApiUrl('/admin/user/update-role'),
         {
-          method: 'PUT', // Atau PATCH, sesuaikan dengan API Anda
+          method: 'PUT',
           headers: {
             Authorization: `Bearer ${token}`,
-            // 'Content-Type': 'application/json', // useFetch otomatis
           },
-          body: { userId, newRole }, // Kirim newRole sebagai nilai enum (string)
-          cache: 'no-cache',
+          body: { userId, newRole },
         },
       )
 
-      if (fetchError.value)
-        throw fetchError.value
-
-      if (!data.value?.status) { // Periksa status dari respons
-        throw new Error(data.value?.message || 'Gagal memperbarui peran pengguna.')
+      if (!data?.status) {
+        throw new Error(data?.message || 'Gagal memperbarui peran pengguna.')
       }
 
       // Setelah berhasil, fetch ulang semua pengguna untuk data terbaru
@@ -212,7 +224,7 @@ export default function useAdminUsers() {
       //   localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
       // }
 
-      return data.value.data // Mengembalikan data dari respons jika ada
+      return data.data // Mengembalikan data dari respons jika ada
     }
     catch (err: any) {
       const friendlyError = getErrorMessage(err, 'Gagal memperbarui peran pengguna.')

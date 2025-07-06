@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { Activity, BookOpen, Package, Users, Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-vue-next'
+import { useAuthUser } from '@/composables/useAuthUser'
+import { Activity, AlertCircle, BookOpen, Calendar, CheckCircle, Clock, Package, Users } from 'lucide-vue-next'
 import useAdminBorrows from '~/composables/useAdminBorrows'
 import useAdminInventories from '~/composables/useAdminInventories'
 import useAdminUsers from '~/composables/useAdminUsers'
-import { useAuthUser } from '@/composables/useAuthUser'
-import { decodeJWT } from '~/utils/jwt'
 
 // Get user data
 const user = useAuthUser()
@@ -17,68 +16,95 @@ const { users, loading: usersLoading, error: usersError, fetchUsers } = useAdmin
 // Computed dashboard data
 const dashboardData = computed(() => {
   const today = new Date().toISOString().split('T')[0]
-  
+
   return {
     totalInventories: inventories.value?.length || 0,
     totalUsers: users.value?.length || 0,
-    activeBorrows: borrows.value?.filter(b => b.status === 'ACTIVE').length || 0,
-    pendingReturns: borrows.value?.filter(b => b.status === 'PENDING').length || 0,
-    todayBorrows: borrows.value?.filter(b => b.dateBorrow?.startsWith(today)).length || 0,
-    overdueItems: borrows.value?.filter(b => {
-      if (b.status !== 'ACTIVE') return false
-      const returnDate = new Date(b.dateReturn)
-      return returnDate < new Date()
+    activeBorrows: borrows.value?.filter((b) => {
+      const borrowDetails = Array.isArray(b.borrowDetails) ? b.borrowDetails : b.borrowDetails ? [b.borrowDetails] : []
+      return borrowDetails[0]?.status === 'ACTIVE'
     }).length || 0,
-    completedReturns: borrows.value?.filter(b => b.status === 'RETURNED').length || 0,
+    pendingReturns: borrows.value?.filter((b) => {
+      const borrowDetails = Array.isArray(b.borrowDetails) ? b.borrowDetails : b.borrowDetails ? [b.borrowDetails] : []
+      return borrowDetails[0]?.status === 'PENDING'
+    }).length || 0,
+    todayBorrows: borrows.value?.filter(b => b.dateBorrow?.startsWith(today)).length || 0,
+    overdueItems: borrows.value?.filter((b) => {
+      const borrowDetails = Array.isArray(b.borrowDetails) ? b.borrowDetails : b.borrowDetails ? [b.borrowDetails] : []
+      if (borrowDetails[0]?.status !== 'ACTIVE')
+        return false
+      const returnDate = b.dateReturn ? new Date(b.dateReturn) : null
+      return returnDate && returnDate < new Date()
+    }).length || 0,
+    completedReturns: borrows.value?.filter((b) => {
+      const borrowDetails = Array.isArray(b.borrowDetails) ? b.borrowDetails : b.borrowDetails ? [b.borrowDetails] : []
+      return borrowDetails[0]?.status === 'RETURNED'
+    }).length || 0,
     totalBorrows: borrows.value?.length || 0,
   }
 })
 
-const recentActivities = computed(() => {
-  if (!borrows.value) return []
-  
-  const recentBorrows = borrows.value
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5)
+const currentTime = ref(Date.now())
 
-  return recentBorrows.map(borrow => {
-    const borrowDetails = Array.isArray(borrow.borrowDetails) 
-      ? borrow.borrowDetails 
+const sortedBorrows = computed(() => {
+  if (!borrows.value)
+    return []
+  return [...borrows.value].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+})
+
+const recentActivities = computed(() => {
+  if (!sortedBorrows.value)
+    return []
+
+  const recentBorrows = sortedBorrows.value.slice(0, 5)
+
+  return recentBorrows.map((borrow) => {
+    const borrowDetails = Array.isArray(borrow.borrowDetails)
+      ? borrow.borrowDetails
       : borrow.borrowDetails ? [borrow.borrowDetails] : []
-    
+
     const itemName = borrowDetails[0]?.inventory?.name || 'Item tidak diketahui'
     const userName = borrow.user?.username || 'Pengguna tidak diketahui'
-    
-    const timeDiff = Date.now() - new Date(borrow.createdAt).getTime()
+
+    const timeDiff = currentTime.value - new Date(borrow.createdAt).getTime()
     const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60))
-    const timeText = hoursAgo < 1 ? 'Baru saja' : 
-                    hoursAgo < 24 ? `${hoursAgo} jam yang lalu` : 
-                    `${Math.floor(hoursAgo / 24)} hari yang lalu`
+    const timeText = hoursAgo < 1
+      ? 'Baru saja'
+      : hoursAgo < 24
+        ? `${hoursAgo} jam yang lalu`
+        : `${Math.floor(hoursAgo / 24)} hari yang lalu`
+
+    const borrowStatus = borrowDetails[0]?.status || 'UNKNOWN'
+    const isOverdue = borrow.dateReturn && new Date(borrow.dateReturn).getTime() < currentTime.value
 
     return {
       id: borrow.borrowId,
-      type: borrow.status === 'RETURNED' ? 'return' : 
-            borrow.status === 'ACTIVE' && new Date(borrow.dateReturn) < new Date() ? 'overdue' : 'borrow',
+      type: borrowStatus === 'RETURNED'
+        ? 'return'
+        : borrowStatus === 'ACTIVE' && isOverdue ? 'overdue' : 'borrow',
       user: userName,
       item: itemName,
       time: timeText,
-      status: borrow.status === 'RETURNED' ? 'success' : 
-              borrow.status === 'PENDING' ? 'pending' : 
-              borrow.status === 'ACTIVE' && new Date(borrow.dateReturn) < new Date() ? 'warning' : 'success'
+      status: borrowStatus === 'RETURNED'
+        ? 'success'
+        : borrowStatus === 'PENDING'
+          ? 'pending'
+          : borrowStatus === 'ACTIVE' && isOverdue ? 'warning' : 'success',
     }
   })
 })
 
 const topInventories = computed(() => {
-  if (!borrows.value || !inventories.value) return []
-  
+  if (!borrows.value || !inventories.value)
+    return []
+
   const inventoryBorrowCounts: Record<string, number> = {}
-  borrows.value.forEach(borrow => {
-    const borrowDetails = Array.isArray(borrow.borrowDetails) 
-      ? borrow.borrowDetails 
+  borrows.value.forEach((borrow) => {
+    const borrowDetails = Array.isArray(borrow.borrowDetails)
+      ? borrow.borrowDetails
       : borrow.borrowDetails ? [borrow.borrowDetails] : []
-    
-    borrowDetails.forEach(detail => {
+
+    borrowDetails.forEach((detail) => {
       const inventoryName = detail.inventory?.name
       if (inventoryName) {
         inventoryBorrowCounts[inventoryName] = (inventoryBorrowCounts[inventoryName] || 0) + 1
@@ -92,7 +118,7 @@ const topInventories = computed(() => {
       return {
         name,
         borrows: count,
-        available: inventory?.quantity || 0
+        available: inventory?.quantity || 0,
       }
     })
     .sort((a, b) => b.borrows - a.borrows)
@@ -100,15 +126,17 @@ const topInventories = computed(() => {
 })
 
 const userStats = computed(() => {
-  if (!borrows.value || !users.value) return {
-    totalActive: 0,
-    newThisMonth: 0,
-    topBorrower: '',
-    topBorrowerCount: 0,
+  if (!borrows.value || !users.value) {
+    return {
+      totalActive: 0,
+      newThisMonth: 0,
+      topBorrower: '',
+      topBorrowerCount: 0,
+    }
   }
-  
+
   const userBorrowCounts: Record<string, number> = {}
-  borrows.value.forEach(borrow => {
+  borrows.value.forEach((borrow) => {
     const userName = borrow.user?.username
     if (userName) {
       userBorrowCounts[userName] = (userBorrowCounts[userName] || 0) + 1
@@ -120,13 +148,13 @@ const userStats = computed(() => {
 
   return {
     totalActive: users.value.filter(u => u.role !== 'ADMIN').length,
-    newThisMonth: users.value.filter(u => {
+    newThisMonth: users.value.filter((u) => {
       const userDate = new Date(u.createdAt)
       const now = new Date()
       return userDate.getMonth() === now.getMonth() && userDate.getFullYear() === now.getFullYear()
     }).length,
     topBorrower: topBorrower?.[0] || 'Tidak ada data',
-    topBorrowerCount: topBorrower?.[1] || 0
+    topBorrowerCount: topBorrower?.[1] || 0,
   }
 })
 
@@ -134,14 +162,15 @@ const loading = computed(() => borrowsLoading.value || inventoriesLoading.value 
 const error = computed(() => borrowsError.value || inventoriesError.value || usersError.value)
 
 // Function to reload all dashboard data
-const loadDashboardData = async () => {
+async function loadDashboardData() {
   try {
     await Promise.all([
       fetchBorrows(true),
       fetchInventories(true),
-      fetchUsers(true)
+      fetchUsers(true),
     ])
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error loading dashboard data:', err)
   }
 }
@@ -180,7 +209,7 @@ let refreshInterval: NodeJS.Timeout | null = null
 onMounted(() => {
   // Load data from all composables
   loadDashboardData()
-  
+
   // Set up auto-refresh for real-time updates
   refreshInterval = setInterval(() => {
     if (!loading.value) {
@@ -216,7 +245,7 @@ definePageMeta({
         </div>
         <div class="flex items-center gap-2">
           <Button variant="outline" size="sm">
-            <Calendar class="h-4 w-4 mr-2" />
+            <Calendar class="mr-2 h-4 w-4" />
             {{ new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
           </Button>
         </div>
@@ -227,8 +256,10 @@ definePageMeta({
     <div v-if="error" class="flex items-center justify-center py-12">
       <div class="flex flex-col items-center gap-4">
         <AlertCircle class="h-8 w-8 text-red-500" />
-        <p class="text-red-500">{{ error }}</p>
-        <Button @click="loadDashboardData" variant="outline">
+        <p class="text-red-500">
+          {{ error }}
+        </p>
+        <Button variant="outline" @click="loadDashboardData">
           Coba Lagi
         </Button>
       </div>
@@ -237,24 +268,28 @@ definePageMeta({
     <!-- Loading State -->
     <div v-else-if="loading" class="flex items-center justify-center py-12">
       <div class="flex flex-col items-center gap-4">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <p class="text-muted-foreground">Memuat data dashboard...</p>
+        <div class="h-8 w-8 animate-spin border-b-2 border-primary rounded-full" />
+        <p class="text-muted-foreground">
+          Memuat data dashboard...
+        </p>
       </div>
     </div>
 
     <!-- Dashboard Content -->
     <div v-else class="space-y-6">
       <!-- Stats Cards -->
-      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div class="grid gap-4 lg:grid-cols-4 md:grid-cols-2">
         <Card>
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
               Total Inventaris
             </CardTitle>
             <Package class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ dashboardData.totalInventories }}</div>
+            <div class="text-2xl font-bold">
+              {{ dashboardData.totalInventories }}
+            </div>
             <p class="text-xs text-muted-foreground">
               Item tersedia untuk dipinjam
             </p>
@@ -262,14 +297,16 @@ definePageMeta({
         </Card>
 
         <Card>
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
               Peminjaman Aktif
             </CardTitle>
             <BookOpen class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ dashboardData.activeBorrows }}</div>
+            <div class="text-2xl font-bold">
+              {{ dashboardData.activeBorrows }}
+            </div>
             <p class="text-xs text-muted-foreground">
               Sedang dipinjam saat ini
             </p>
@@ -277,14 +314,16 @@ definePageMeta({
         </Card>
 
         <Card>
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
               Menunggu Pengembalian
             </CardTitle>
             <Clock class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ dashboardData.pendingReturns }}</div>
+            <div class="text-2xl font-bold">
+              {{ dashboardData.pendingReturns }}
+            </div>
             <p class="text-xs text-muted-foreground">
               Belum dikembalikan
             </p>
@@ -292,14 +331,16 @@ definePageMeta({
         </Card>
 
         <Card>
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
               Terlambat
             </CardTitle>
             <AlertCircle class="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold text-red-600">{{ dashboardData.overdueItems }}</div>
+            <div class="text-2xl text-red-600 font-bold">
+              {{ dashboardData.overdueItems }}
+            </div>
             <p class="text-xs text-muted-foreground">
               Melewati batas waktu
             </p>
@@ -308,16 +349,18 @@ definePageMeta({
       </div>
 
       <!-- Admin Specific Stats -->
-      <div v-if="user?.role === 'ADMIN'" class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div v-if="user?.role === 'ADMIN'" class="grid gap-4 lg:grid-cols-4 md:grid-cols-2">
         <Card>
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
               Total Pengguna
             </CardTitle>
             <Users class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ dashboardData.totalUsers }}</div>
+            <div class="text-2xl font-bold">
+              {{ dashboardData.totalUsers }}
+            </div>
             <p class="text-xs text-muted-foreground">
               Pengguna terdaftar
             </p>
@@ -325,14 +368,16 @@ definePageMeta({
         </Card>
 
         <Card>
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
               Peminjaman Hari Ini
             </CardTitle>
             <Activity class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ dashboardData.todayBorrows }}</div>
+            <div class="text-2xl font-bold">
+              {{ dashboardData.todayBorrows }}
+            </div>
             <p class="text-xs text-muted-foreground">
               Dipinjam hari ini
             </p>
@@ -340,14 +385,16 @@ definePageMeta({
         </Card>
 
         <Card>
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
               Pengembalian Selesai
             </CardTitle>
             <CheckCircle class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ dashboardData.completedReturns }}</div>
+            <div class="text-2xl font-bold">
+              {{ dashboardData.completedReturns }}
+            </div>
             <p class="text-xs text-muted-foreground">
               Telah dikembalikan
             </p>
@@ -355,14 +402,16 @@ definePageMeta({
         </Card>
 
         <Card>
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
               Total Peminjaman
             </CardTitle>
             <BookOpen class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ dashboardData.totalBorrows }}</div>
+            <div class="text-2xl font-bold">
+              {{ dashboardData.totalBorrows }}
+            </div>
             <p class="text-xs text-muted-foreground">
               Sepanjang waktu
             </p>
@@ -381,14 +430,14 @@ definePageMeta({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div v-if="recentActivities.length === 0" class="text-center py-8 text-muted-foreground">
+            <div v-if="recentActivities.length === 0" class="py-8 text-center text-muted-foreground">
               Belum ada aktivitas
             </div>
             <div v-else class="space-y-4">
               <div
                 v-for="activity in recentActivities"
                 :key="activity.id"
-                class="flex items-center gap-4 p-3 rounded-lg border"
+                class="flex items-center gap-4 border rounded-lg p-3"
               >
                 <div class="flex-shrink-0">
                   <component
@@ -397,7 +446,7 @@ definePageMeta({
                     :class="getActivityColor(activity.status)"
                   />
                 </div>
-                <div class="flex-1 min-w-0">
+                <div class="min-w-0 flex-1">
                   <p class="text-sm font-medium">
                     {{ activity.user }}
                   </p>
@@ -423,19 +472,19 @@ definePageMeta({
           </CardHeader>
           <CardContent class="space-y-3">
             <Button class="w-full justify-start" variant="outline" @click="navigateTo('/services/borrow')">
-              <BookOpen class="h-4 w-4 mr-2" />
+              <BookOpen class="mr-2 h-4 w-4" />
               Pinjam Inventaris
             </Button>
             <Button class="w-full justify-start" variant="outline" @click="navigateTo('/services/return')">
-              <CheckCircle class="h-4 w-4 mr-2" />
+              <CheckCircle class="mr-2 h-4 w-4" />
               Kembalikan Item
             </Button>
             <Button class="w-full justify-start" variant="outline" @click="navigateTo('/borrows')">
-              <Clock class="h-4 w-4 mr-2" />
+              <Clock class="mr-2 h-4 w-4" />
               Riwayat Peminjaman
             </Button>
             <Button class="w-full justify-start" variant="outline" @click="navigateTo('/inventories')">
-              <Package class="h-4 w-4 mr-2" />
+              <Package class="mr-2 h-4 w-4" />
               Lihat Inventaris
             </Button>
           </CardContent>
@@ -451,20 +500,16 @@ definePageMeta({
           </CardHeader>
           <CardContent class="space-y-3">
             <Button class="w-full justify-start" variant="outline" @click="navigateTo('/users')">
-              <Users class="h-4 w-4 mr-2" />
+              <Users class="mr-2 h-4 w-4" />
               Kelola Pengguna
             </Button>
             <Button class="w-full justify-start" variant="outline" @click="navigateTo('/inventories')">
-              <Package class="h-4 w-4 mr-2" />
+              <Package class="mr-2 h-4 w-4" />
               Kelola Inventaris
             </Button>
             <Button class="w-full justify-start" variant="outline" @click="navigateTo('/borrows')">
-              <BookOpen class="h-4 w-4 mr-2" />
+              <BookOpen class="mr-2 h-4 w-4" />
               Kelola Peminjaman
-            </Button>
-            <Button class="w-full justify-start" variant="outline" @click="navigateTo('/returns')">
-              <AlertCircle class="h-4 w-4 mr-2" />
-              Lihat Terlambat
             </Button>
           </CardContent>
         </Card>
@@ -478,28 +523,30 @@ definePageMeta({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div v-if="topInventories.length === 0" class="text-center py-8 text-muted-foreground">
+            <div v-if="topInventories.length === 0" class="py-8 text-center text-muted-foreground">
               Belum ada data inventaris
             </div>
             <div v-else class="space-y-4">
               <div
                 v-for="(item, index) in topInventories"
                 :key="index"
-                class="flex items-center justify-between p-3 rounded-lg border"
+                class="flex items-center justify-between border rounded-lg p-3"
               >
                 <div class="flex items-center gap-3">
-                  <div class="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                    <span class="text-sm font-medium text-primary">{{ index + 1 }}</span>
+                  <div class="h-8 w-8 flex flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <span class="text-sm text-primary font-medium">{{ index + 1 }}</span>
                   </div>
                   <div>
-                    <p class="font-medium">{{ item.name }}</p>
+                    <p class="font-medium">
+                      {{ item.name }}
+                    </p>
                     <p class="text-sm text-muted-foreground">
                       {{ item.borrows }} kali dipinjam
                     </p>
                   </div>
                 </div>
                 <div class="text-right">
-                  <p class="text-sm font-medium text-green-600">
+                  <p class="text-sm text-green-600 font-medium">
                     {{ item.available }} tersedia
                   </p>
                 </div>
@@ -517,19 +564,25 @@ definePageMeta({
             </CardDescription>
           </CardHeader>
           <CardContent class="space-y-4">
-            <div class="flex justify-between items-center">
+            <div class="flex items-center justify-between">
               <span class="text-sm">Pengguna Aktif</span>
               <span class="font-medium">{{ userStats.totalActive }}</span>
             </div>
-            <div class="flex justify-between items-center">
+            <div class="flex items-center justify-between">
               <span class="text-sm">Baru Bulan Ini</span>
               <span class="font-medium">{{ userStats.newThisMonth }}</span>
             </div>
             <Separator />
             <div>
-              <p class="text-sm font-medium mb-2">Peminjam Teraktif</p>
-              <p class="text-sm text-muted-foreground">{{ userStats.topBorrower }}</p>
-              <p class="text-xs text-muted-foreground">{{ userStats.topBorrowerCount }} kali meminjam</p>
+              <p class="mb-2 text-sm font-medium">
+                Peminjam Teraktif
+              </p>
+              <p class="text-sm text-muted-foreground">
+                {{ userStats.topBorrower }}
+              </p>
+              <p class="text-xs text-muted-foreground">
+                {{ userStats.topBorrowerCount }} kali meminjam
+              </p>
             </div>
           </CardContent>
         </Card>

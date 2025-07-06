@@ -44,10 +44,10 @@ const onSubmit = handleSubmit((values) => {
 <template>
   <div>
     <h3 class="text-lg font-medium">
-      Appearance
+      Tampilan
     </h3>
     <p class="text-sm text-muted-foreground">
-      Customize the appearance of the app. Automatically switch between day and night themes.
+      Sesuaikan tampilan aplikasi. Beralih otomatis antara mode terang dan gelap.
     </p>
   </div>
   <Separator />
@@ -71,14 +71,14 @@ const onSubmit = handleSubmit((values) => {
                 Manrope
               </option>
               <option value="system">
-                System
+                Sistem
               </option>
             </select>
           </FormControl>
           <Icon name="i-radix-icons-chevron-down" class="pointer-events-none absolute right-3 top-2.5 h-4 w-4 opacity-50" />
         </div>
         <FormDescription>
-          Set the font you want to use in the dashboard.
+          Pilih font yang ingin digunakan di dashboard.
         </FormDescription>
         <FormMessage />
       </FormItem>
@@ -86,9 +86,9 @@ const onSubmit = handleSubmit((values) => {
 
     <FormField v-slot="{ componentField }" type="radio" name="theme">
       <FormItem class="space-y-1">
-        <FormLabel>Theme</FormLabel>
+        <FormLabel>Tema</FormLabel>
         <FormDescription>
-          Select the theme for the dashboard.
+          Pilih tema untuk dashboard.
         </FormDescription>
         <FormMessage />
 
@@ -118,7 +118,7 @@ const onSubmit = handleSubmit((values) => {
                 </div>
               </div>
               <span class="block w-full p-2 text-center font-normal">
-                Light
+                Terang
               </span>
             </FormLabel>
           </FormItem>
@@ -144,7 +144,7 @@ const onSubmit = handleSubmit((values) => {
                 </div>
               </div>
               <span class="block w-full p-2 text-center font-normal">
-                Dark
+                Gelap
               </span>
             </FormLabel>
           </FormItem>
@@ -154,7 +154,7 @@ const onSubmit = handleSubmit((values) => {
 
     <div class="flex justify-start">
       <Button type="submit">
-        Update preferences
+        Perbarui preferensi
       </Button>
     </div>
   </form>

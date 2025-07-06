@@ -247,21 +247,21 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
 <template>
   <div>
     <h3 class="text-lg font-medium">
-      Borrow Items
+      Pinjam Barang
     </h3>
     <p class="text-sm text-muted-foreground">
-      Need to borrow equipment? Fill out this form to request items from our inventory. We'll notify you once your request is approved!
+      Butuh barang? Isi form ini untuk meminta barang dari inventaris kami. Kami akan memberi tahu Anda ketika permintaan Anda disetujui!
     </p>
   </div>
   <Separator />
   <form class="space-y-6" @submit="onSubmit">
     <FormField v-slot="{ componentField }" name="inventoryId">
       <FormItem>
-        <FormLabel>Item</FormLabel>
+        <FormLabel>Barang</FormLabel>
         <Select v-bind="componentField" :disabled="props.isLoading || !inventories.length">
           <FormControl>
             <SelectTrigger>
-              <SelectValue placeholder="Select an item" />
+              <SelectValue placeholder="Pilih barang" />
             </SelectTrigger>
           </FormControl>
           <SelectContent>
@@ -286,24 +286,24 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
     <div v-if="selectedItem" class="grid grid-cols-2 gap-4 border rounded-lg p-4">
       <div>
         <p class="text-sm font-medium">
-          Item Name
+          Nama Barang
         </p><p>{{ selectedItem.name }}</p>
       </div>
       <div>
         <p class="text-sm font-medium">
-          Condition
+          Kondisi
         </p><p :class="conditionClass">
           {{ selectedItem.condition }}
         </p>
       </div>
       <div>
         <p class="text-sm font-medium">
-          Available Stock
+          Stok Tersedia
         </p><p>{{ selectedItem.quantity }}</p>
       </div>
       <div>
         <p class="text-sm font-medium">
-          Item Code
+          Kode Barang
         </p><p class="font-mono">
           {{ selectedItem.code }}
         </p>
@@ -312,11 +312,11 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
 
     <FormField v-slot="{ componentField }" name="quantity">
       <FormItem>
-        <FormLabel>Quantity</FormLabel>
+        <FormLabel>Jumlah</FormLabel>
         <FormControl>
           <Input
             type="number"
-            placeholder="Enter quantity"
+            placeholder="Masukkan jumlah"
             :min="1"
             :max="selectedItem?.quantity || 100"
             v-bind="componentField"
@@ -324,7 +324,7 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
           />
         </FormControl>
         <FormDescription v-if="selectedItem">
-          Maximum available: {{ selectedItem.quantity }}
+          Stok tersedia: {{ selectedItem.quantity }}
         </FormDescription>
         <FormMessage />
       </FormItem>
@@ -332,14 +332,14 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
 
     <FormField name="dateBorrow">
       <FormItem>
-        <FormLabel>Borrow & Return Date</FormLabel>
+        <FormLabel>Tanggal Pinjam & Kembali</FormLabel>
         <FormControl>
           <BaseDateRangePicker
             v-model="dateRangePickerValue"
             :disabled="props.isLoading"
             class="w-full"
             :number-of-months="1"
-            placeholder="Select borrow and return date"
+            placeholder="Pilih tanggal pinjam dan kembali"
           />
         </FormControl>
         <div class="mt-1 text-sm">
@@ -351,7 +351,7 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
 
     <Button type="submit" class="w-full" :disabled="props.isLoading || !selectedItem || !borrowForm.meta.value.valid">
       <Loader2 v-if="props.isLoading" class="mr-2 h-4 w-4 animate-spin" />
-      <span v-else>Request Borrow</span>
+      <span v-else>Pinjam Barang</span>
     </Button>
   </form>
 </template>

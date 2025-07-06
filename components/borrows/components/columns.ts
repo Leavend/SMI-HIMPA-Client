@@ -28,7 +28,7 @@ export const columns: ColumnDef<Borrow>[] = [
   },
   {
     accessorKey: 'inventoryName',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Nama Inventaris' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Nama Barang' }),
     cell: ({ row }) => {
       const rawBorrowDetails = (row.original as Borrow & { borrowDetails?: BorrowDetail[] }).borrowDetails
       const borrowDetails = Array.isArray(rawBorrowDetails)
@@ -42,7 +42,7 @@ export const columns: ColumnDef<Borrow>[] = [
   },
   {
     id: 'username', // <- id biasa, bukan accessorKey
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Username' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Nama Peminjam' }),
     cell: ({ row }) => {
       const user = (row.original as Borrow).user
       const username = user?.username || 'Tidak ada user'
@@ -72,7 +72,7 @@ export const columns: ColumnDef<Borrow>[] = [
   },
   {
     accessorKey: 'status',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Status' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Status Peminjaman' }),
     cell: ({ row }) => {
       const rawBorrowDetails = (row.original as Borrow & { borrowDetails?: BorrowDetail[] }).borrowDetails
       const borrowDetails = Array.isArray(rawBorrowDetails)
@@ -80,7 +80,7 @@ export const columns: ColumnDef<Borrow>[] = [
         : rawBorrowDetails ? [rawBorrowDetails] : []
 
       if (borrowDetails.length === 0)
-        return h('span', 'No status available')
+        return h('span', 'Tidak ada status')
 
       return h('div', { class: 'flex flex-col gap-1' }, borrowDetails.map((detail: BorrowDetail) => {
         const status = borrowStatuses.find(status => status.value === detail.status)
@@ -101,7 +101,7 @@ export const columns: ColumnDef<Borrow>[] = [
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Dibuat Pada' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Tanggal Pinjam' }),
     cell: ({ row }) => {
       const date = new Date(row.getValue('createdAt'))
       return h('span', { class: 'font-medium' }, date.toLocaleString('id-ID', {

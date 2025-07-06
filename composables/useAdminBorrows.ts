@@ -127,32 +127,28 @@ export default function useAdminBorrows() {
         }
       }
 
-      const { data, error: fetchError } = await useFetch<FetchBorrowsResponse>(
-        useApiUrl('/admin/borrows'), // Pastikan useApiUrl() menghasilkan URL yang benar
+      const data = await $fetch<FetchBorrowsResponse>(
+        useApiUrl('/admin/borrows'),
         {
           headers: { Authorization: `Bearer ${token}` },
-          cache: 'no-cache', // Selalu ambil data baru dari network jika cache localStorage gagal/kedaluwarsa
         },
       )
 
-      if (fetchError.value)
-        throw fetchError.value // Biarkan getErrorMessage menangani di catch
-
-      const borrowsData = data.value?.data?.borrows
-      if (!data.value?.status || !borrowsData) {
+      const borrowsData = data?.data?.borrows
+      if (!data?.status || !borrowsData) {
         // Jika status false atau data tidak ada, gunakan message dari server jika ada
-        throw new Error(data.value?.message || 'Data peminjaman tidak ditemukan di respons server.')
+        throw new Error(data?.message || 'Data peminjaman tidak ditemukan di respons server.')
       }
 
       // Normalisasi data (opsional, tergantung struktur API Anda)
-      const normalizedBorrows = borrowsData.map((borrow) => {
+      const normalizedBorrows = borrowsData.map((borrow: any) => {
         const normalizedDetails = Array.isArray(borrow.borrowDetails)
           ? borrow.borrowDetails
           : borrow.borrowDetails ? [borrow.borrowDetails] : []
 
         return {
           ...borrow,
-          borrowDetails: normalizedDetails.map(detail => ({
+          borrowDetails: normalizedDetails.map((detail: any) => ({
             ...detail,
             inventory: detail.inventory ?? undefined,
           })),
@@ -192,7 +188,7 @@ export default function useAdminBorrows() {
       adminGuard()
       const token = useToken().value
 
-      const { error: fetchError, data } = await useFetch<ConfirmRequestBorrowResponse>(
+      const data = await $fetch<ConfirmRequestBorrowResponse>(
         useApiUrl('/admin/borrow/confirmation-borrow'),
         {
           method: 'PATCH',
@@ -200,22 +196,18 @@ export default function useAdminBorrows() {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: { // useFetch otomatis JSON.stringify jika body adalah objek & Content-Type application/json
+          body: {
             borrowId: formData.borrowId,
             status: formData.status,
           },
-          cache: 'no-cache',
         },
       )
 
-      if (fetchError.value)
-        throw fetchError.value
-
-      if (!data.value?.status || !data.value?.data?.borrowId) {
-        throw new Error(data.value?.message || 'Gagal mengkonfirmasi peminjaman, respons tidak valid.')
+      if (!data?.status || !data?.data?.borrowId) {
+        throw new Error(data?.message || 'Gagal mengkonfirmasi peminjaman, respons tidak valid.')
       }
 
-      const updatedData = data.value.data
+      const updatedData = data.data
 
       // Update local state
       const index = borrows.value.findIndex(b => b.borrowId === updatedData.borrowId)
@@ -259,7 +251,7 @@ export default function useAdminBorrows() {
       if (formData.status)
         bodyPayload.status = formData.status
 
-      const { error: fetchError, data } = await useFetch<UpdateBorrowResponse>(
+      const data = await $fetch<UpdateBorrowResponse>(
         useApiUrl(`/admin/borrow/${formData.borrowId}`),
         {
           method: 'PUT',
@@ -268,19 +260,15 @@ export default function useAdminBorrows() {
             'Content-Type': 'application/json',
           },
           body: bodyPayload,
-          cache: 'no-cache',
         },
       )
 
-      if (fetchError.value)
-        throw fetchError.value
-
-      if (!data.value?.status || !data.value?.data) {
-        throw new Error(data.value?.message || 'Gagal memperbarui peminjaman, respons tidak valid.')
+      if (!data?.status || !data?.data) {
+        throw new Error(data?.message || 'Gagal memperbarui peminjaman, respons tidak valid.')
       }
       await fetchBorrows(true) // Paksa fetch ulang untuk sinkronisasi penuh
 
-      return data.value.data
+      return data.data
     }
     catch (err: any) {
       const friendlyError = getErrorMessage(err, 'Gagal memperbarui peminjaman.')

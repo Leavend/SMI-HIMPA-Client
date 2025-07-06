@@ -8,7 +8,7 @@ export const inventorySchema = z.object({
   code: z.string(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable(),
+  deletedAt: z.string().datetime().nullable().optional(),
 })
 
 export type Inventory = z.infer<typeof inventorySchema>

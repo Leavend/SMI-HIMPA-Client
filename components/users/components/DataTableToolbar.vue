@@ -19,7 +19,7 @@ const isFiltered = computed(() => props.table.getState().columnFilters.length > 
   <div class="flex items-center justify-between">
     <div class="flex flex-1 items-center space-x-2">
       <Input
-        placeholder="Filter users..."
+        placeholder="Filter pengguna..."
         :model-value="(table.getColumn('username')?.getFilterValue() as string) ?? ''"
         class="h-8 w-[150px] lg:w-[250px]"
         @input="table.getColumn('username')?.setFilterValue($event.target.value)"
@@ -27,7 +27,7 @@ const isFiltered = computed(() => props.table.getState().columnFilters.length > 
       <DataTableFacetedFilter
         v-if="table.getColumn('role')"
         :column="table.getColumn('role')"
-        title="Role"
+        title="Peran"
         :options="roles"
       >
         <Button

@@ -14,7 +14,7 @@ export const columns: ColumnDef<Inventory>[] = [
     header: ({ table }) => h(Checkbox, {
       'checked': table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate'),
       'onUpdate:checked': value => table.toggleAllPageRowsSelected(!!value),
-      'ariaLabel': 'Select all',
+      'ariaLabel': 'Pilih semua',
       'class': 'translate-y-0.5',
     }),
     cell: ({ row }) => h(Checkbox, { 'checked': row.getIsSelected(), 'onUpdate:checked': value => row.toggleSelected(!!value), 'ariaLabel': 'Select row', 'class': 'translate-y-0.5' }),
@@ -23,17 +23,17 @@ export const columns: ColumnDef<Inventory>[] = [
   },
   {
     accessorKey: 'name',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Inventory' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Nama Barang' }),
     cell: ({ row }) => h('span', { class: 'font-medium' }, row.getValue('name')),
   },
   {
     accessorKey: 'quantity',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Quantity' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Jumlah' }),
     cell: ({ row }) => h('span', { class: 'font-medium' }, row.getValue('quantity')),
   },
   {
     accessorKey: 'condition',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Condition' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Kondisi' }),
 
     cell: ({ row }) => {
       const condition = conditions.find(
@@ -54,12 +54,12 @@ export const columns: ColumnDef<Inventory>[] = [
   },
   {
     accessorKey: 'code',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Code' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Kode Barang' }),
     cell: ({ row }) => h('div', { class: 'w-20' }, row.getValue('code')),
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Created At' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Dibuat Pada' }),
     cell: ({ row }) => {
       const date = new Date(row.getValue('createdAt'))
       const options: Intl.DateTimeFormatOptions = {
@@ -76,7 +76,7 @@ export const columns: ColumnDef<Inventory>[] = [
   },
   {
     accessorKey: 'updatedAt',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Updated At' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Diperbarui Pada' }),
     cell: ({ row }) => {
       const date = new Date(row.getValue('updatedAt'))
       const options: Intl.DateTimeFormatOptions = {

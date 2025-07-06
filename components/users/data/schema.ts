@@ -10,7 +10,7 @@ export const userSchema = z.object({
   role: z.nativeEnum(Role),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable(),
+  deletedAt: z.string().datetime().nullable().optional(),
 })
 
 export type User = z.infer<typeof userSchema>

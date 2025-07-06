@@ -5,10 +5,10 @@
   <div class="pb-16 space-y-6">
     <div class="space-y-0.5">
       <h2 class="text-2xl font-bold tracking-tight">
-        Services
+        Layanan
       </h2>
       <p class="text-muted-foreground">
-        Manage your borrow & return.
+        Kelola peminjaman & pengembalian.
       </p>
     </div>
 

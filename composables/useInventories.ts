@@ -42,7 +42,7 @@ export default function useInventories() {
       }
 
       // Step 2: Fetch tetap dilakukan
-      const { data, error: fetchError } = await useFetch<FetchInventoriesResponse>(
+      const data = await $fetch<FetchInventoriesResponse>(
         useApiUrl('/inventory/inventories'),
         {
           headers: {
@@ -51,10 +51,7 @@ export default function useInventories() {
         },
       )
 
-      if (fetchError.value)
-        throw new Error(fetchError.value.message)
-
-      const inventoriesData = data.value?.data?.inventories
+      const inventoriesData = data?.data?.inventories
       if (!inventoriesData)
         throw new Error('Data inventory tidak ditemukan di response server.')
 

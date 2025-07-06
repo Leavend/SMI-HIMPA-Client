@@ -8,7 +8,7 @@ definePageMeta({
   <div class="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-10 text-center text-foreground">
     <div class="text-center space-y-6">
       <div class="flex justify-center">
-        <img src="/constants/2.svg" alt="Logo HIMPA" class="w-16 h-16" />
+        <img src="/constants/2.svg" alt="Logo HIMPA" class="h-16 w-16">
       </div>
       <h1 class="text-4xl font-extrabold">
         Selamat Datang di Aplikasi HIMPA
@@ -19,7 +19,7 @@ definePageMeta({
       <div class="space-y-2">
         <NuxtLink
           to="/login"
-          class="block mx-auto rounded-lg bg-primary text-white dark:bg-white dark:text-black px-6 py-2 transition hover:bg-primary/90 dark:hover:bg-white/80 w-auto max-w-xs text-center"
+          class="mx-auto block max-w-xs w-auto rounded-lg bg-primary px-6 py-2 text-center text-white transition dark:bg-white hover:bg-primary/90 dark:text-black dark:hover:bg-white/80"
         >
           Masuk untuk Memulai
         </NuxtLink>

@@ -48,7 +48,6 @@ const adminExtraMenu: NavMenu[] = [
         title: 'Tugas Peminjaman',
         icon: 'i-lucide-calendar-check-2',
         link: '/borrows',
-        new: true,
       },
     ],
   },

@@ -41,7 +41,7 @@ const selectedValues = computed(() => new Set(props.column?.getFilterValue() as 
               variant="secondary"
               class="rounded-sm px-1 font-normal"
             >
-              {{ selectedValues.size }} selected
+              {{ selectedValues.size }} dipilih
             </Badge>
 
             <template v-else>
@@ -68,7 +68,7 @@ const selectedValues = computed(() => new Set(props.column?.getFilterValue() as 
       >
         <CommandInput :placeholder="title" />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>Tidak ada hasil.</CommandEmpty>
           <CommandGroup>
             <CommandItem
               v-for="option in options"
@@ -111,11 +111,11 @@ const selectedValues = computed(() => new Set(props.column?.getFilterValue() as 
             <CommandSeparator />
             <CommandGroup>
               <CommandItem
-                :value="{ label: 'Clear filters' }"
+                :value="{ label: 'Hapus filter' }"
                 class="justify-center text-center"
                 @select="column?.setFilterValue(undefined)"
               >
-                Clear filters
+                Hapus filter
               </CommandItem>
             </CommandGroup>
           </template>

@@ -14,7 +14,7 @@ export const columns: ColumnDef<User>[] = [
     header: ({ table }) => h(Checkbox, {
       'checked': table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate'),
       'onUpdate:checked': value => table.toggleAllPageRowsSelected(!!value),
-      'ariaLabel': 'Select all',
+      'ariaLabel': 'Pilih semua',
       'class': 'translate-y-0.5',
     }),
     cell: ({ row }) => h(Checkbox, { 'checked': row.getIsSelected(), 'onUpdate:checked': value => row.toggleSelected(!!value), 'ariaLabel': 'Select row', 'class': 'translate-y-0.5' }),
@@ -23,7 +23,7 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'username',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Username' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Nama Pengguna' }),
     cell: ({ row }) => h('span', { class: 'font-medium' }, row.getValue('username')),
   },
   {
@@ -33,7 +33,7 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'role',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Role' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Peran' }),
     cell: ({ row }) => {
       const role = roles.find(role => role.value === row.getValue('role'))
       if (!role)
@@ -48,7 +48,7 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Created At' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Dibuat Pada' }),
     cell: ({ row }) => {
       const date = new Date(row.getValue('createdAt'))
       const options: Intl.DateTimeFormatOptions = {
@@ -65,7 +65,7 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'updatedAt',
-    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Updated At' }),
+    header: ({ column }) => h(DataTableColumnHeader, { column, title: 'Diperbarui Pada' }),
     cell: ({ row }) => {
       const date = new Date(row.getValue('updatedAt'))
       const options: Intl.DateTimeFormatOptions = {
