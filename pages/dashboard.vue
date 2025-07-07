@@ -1,26 +1,25 @@
 <script setup lang="ts">
 import { useAuthUser } from '@/composables/useAuthUser'
 import { Activity, AlertCircle, BookOpen, Calendar, CheckCircle, Clock, Package, Users } from 'lucide-vue-next'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import useBorrows from '~/composables/useBorrows'
 import useInventories from '~/composables/useInventories'
+import useAdminBorrows from '~/composables/useAdminBorrows'
+import useAdminInventories from '~/composables/useAdminInventories'
+import useAdminUsers from '~/composables/useAdminUsers'
 
 // Get user data
 const user = useAuthUser()
 const isAdmin = computed(() => user.value?.role === 'ADMIN')
 const userId = computed(() => user.value?.userId)
 
-// Use composables based on role
+// Always initialize all composables reactively
 let borrows, loadingBorrows, errorBorrows, fetchBorrows
 let inventories, loadingInventories, errorInventories, fetchInventories
 let users, loadingUsers, errorUsers, fetchUsers
 
 if (isAdmin.value) {
-  // Lazy import admin composables only for admin
-  const useAdminBorrows = (await import('~/composables/useAdminBorrows')).default
-  const useAdminInventories = (await import('~/composables/useAdminInventories')).default
-  const useAdminUsers = (await import('~/composables/useAdminUsers')).default
-
+  // Admin: use admin composables
   const adminBorrows = useAdminBorrows()
   borrows = adminBorrows.borrows
   loadingBorrows = adminBorrows.loading
@@ -38,14 +37,13 @@ if (isAdmin.value) {
   loadingUsers = adminUsers.loading
   errorUsers = adminUsers.error
   fetchUsers = adminUsers.fetchUsers
-}
-else {
-  // Use user composables for regular users
+} else {
+  // User: use user composables
   const userBorrows = useBorrows()
   borrows = userBorrows.borrows
   loadingBorrows = userBorrows.loading
   errorBorrows = userBorrows.error
-  fetchBorrows = userBorrows.fetchBorrows
+  // Tidak perlu fetchBorrows/fetchUserBorrows manual
 
   const userInventories = useInventories()
   inventories = userInventories.inventories
@@ -53,7 +51,7 @@ else {
   errorInventories = userInventories.error
   fetchInventories = userInventories.fetchInventories
 
-  // Dummy refs/functions for users to avoid linter errors
+  // Dummy for users
   users = ref([])
   loadingUsers = ref(false)
   errorUsers = ref(null)
@@ -256,12 +254,9 @@ async function loadDashboardData() {
         fetchInventories(true),
         fetchUsers(true),
       ])
-    }
-    else {
-      await Promise.all([
-        fetchBorrows(true),
-        fetchInventories(true),
-      ])
+    } else {
+      // Untuk user biasa, cukup refresh inventories saja
+      await fetchInventories(true)
     }
   }
   catch (err) {
