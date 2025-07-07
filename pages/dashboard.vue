@@ -1,17 +1,77 @@
 <script setup lang="ts">
 import { useAuthUser } from '@/composables/useAuthUser'
 import { Activity, AlertCircle, BookOpen, Calendar, CheckCircle, Clock, Package, Users } from 'lucide-vue-next'
-import useAdminBorrows from '~/composables/useAdminBorrows'
-import useAdminInventories from '~/composables/useAdminInventories'
-import useAdminUsers from '~/composables/useAdminUsers'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import useBorrows from '~/composables/useBorrows'
+import useInventories from '~/composables/useInventories'
 
 // Get user data
 const user = useAuthUser()
+const isAdmin = computed(() => user.value?.role === 'ADMIN')
+const userId = computed(() => user.value?.userId)
 
-// Use existing composables for real data
-const { borrows, loading: borrowsLoading, error: borrowsError, fetchBorrows } = useAdminBorrows()
-const { inventories, loading: inventoriesLoading, error: inventoriesError, fetchInventories } = useAdminInventories()
-const { users, loading: usersLoading, error: usersError, fetchUsers } = useAdminUsers()
+// Use composables based on role
+let borrows, loadingBorrows, errorBorrows, fetchBorrows
+let inventories, loadingInventories, errorInventories, fetchInventories
+let users, loadingUsers, errorUsers, fetchUsers
+
+if (isAdmin.value) {
+  // Lazy import admin composables only for admin
+  const useAdminBorrows = (await import('~/composables/useAdminBorrows')).default
+  const useAdminInventories = (await import('~/composables/useAdminInventories')).default
+  const useAdminUsers = (await import('~/composables/useAdminUsers')).default
+
+  const adminBorrows = useAdminBorrows()
+  borrows = adminBorrows.borrows
+  loadingBorrows = adminBorrows.loading
+  errorBorrows = adminBorrows.error
+  fetchBorrows = adminBorrows.fetchBorrows
+
+  const adminInventories = useAdminInventories()
+  inventories = adminInventories.inventories
+  loadingInventories = adminInventories.loading
+  errorInventories = adminInventories.error
+  fetchInventories = adminInventories.fetchInventories
+
+  const adminUsers = useAdminUsers()
+  users = adminUsers.users
+  loadingUsers = adminUsers.loading
+  errorUsers = adminUsers.error
+  fetchUsers = adminUsers.fetchUsers
+}
+else {
+  // Use user composables for regular users
+  const userBorrows = useBorrows()
+  borrows = userBorrows.borrows
+  loadingBorrows = userBorrows.loading
+  errorBorrows = userBorrows.error
+  fetchBorrows = userBorrows.fetchBorrows
+
+  const userInventories = useInventories()
+  inventories = userInventories.inventories
+  loadingInventories = userInventories.loading
+  errorInventories = userInventories.error
+  fetchInventories = userInventories.fetchInventories
+
+  // Dummy refs/functions for users to avoid linter errors
+  users = ref([])
+  loadingUsers = ref(false)
+  errorUsers = ref(null)
+  fetchUsers = async () => {}
+}
+
+// Filter borrows based on user role
+const userBorrows = computed(() => {
+  if (!borrows.value)
+    return []
+
+  if (isAdmin.value) {
+    return borrows.value // Admin sees all borrows
+  }
+  else {
+    return borrows.value.filter(borrow => borrow.userId === userId.value) // User sees only their borrows
+  }
+})
 
 // Computed dashboard data
 const dashboardData = computed(() => {
@@ -19,37 +79,39 @@ const dashboardData = computed(() => {
 
   return {
     totalInventories: inventories.value?.length || 0,
-    totalUsers: users.value?.length || 0,
-    activeBorrows: borrows.value?.filter((b) => {
+    totalUsers: isAdmin.value ? (users.value?.length || 0) : 0, // Only admin sees user count
+    activeBorrows: userBorrows.value?.filter((b) => {
       const borrowDetails = Array.isArray(b.borrowDetails) ? b.borrowDetails : b.borrowDetails ? [b.borrowDetails] : []
       return borrowDetails[0]?.status === 'ACTIVE'
     }).length || 0,
-    pendingReturns: borrows.value?.filter((b) => {
+    pendingReturns: userBorrows.value?.filter((b) => {
       const borrowDetails = Array.isArray(b.borrowDetails) ? b.borrowDetails : b.borrowDetails ? [b.borrowDetails] : []
       return borrowDetails[0]?.status === 'PENDING'
     }).length || 0,
-    todayBorrows: borrows.value?.filter(b => b.dateBorrow?.startsWith(today)).length || 0,
-    overdueItems: borrows.value?.filter((b) => {
+    todayBorrows: isAdmin.value
+      ? (borrows.value?.filter(b => b.dateBorrow?.startsWith(today)).length || 0)
+      : (userBorrows.value?.filter(b => b.dateBorrow?.startsWith(today)).length || 0),
+    overdueItems: userBorrows.value?.filter((b) => {
       const borrowDetails = Array.isArray(b.borrowDetails) ? b.borrowDetails : b.borrowDetails ? [b.borrowDetails] : []
       if (borrowDetails[0]?.status !== 'ACTIVE')
         return false
       const returnDate = b.dateReturn ? new Date(b.dateReturn) : null
       return returnDate && returnDate < new Date()
     }).length || 0,
-    completedReturns: borrows.value?.filter((b) => {
+    completedReturns: userBorrows.value?.filter((b) => {
       const borrowDetails = Array.isArray(b.borrowDetails) ? b.borrowDetails : b.borrowDetails ? [b.borrowDetails] : []
       return borrowDetails[0]?.status === 'RETURNED'
     }).length || 0,
-    totalBorrows: borrows.value?.length || 0,
+    totalBorrows: userBorrows.value?.length || 0,
   }
 })
 
 const currentTime = ref(Date.now())
 
 const sortedBorrows = computed(() => {
-  if (!borrows.value)
+  if (!userBorrows.value)
     return []
-  return [...borrows.value].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  return [...userBorrows.value].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 })
 
 const recentActivities = computed(() => {
@@ -64,7 +126,7 @@ const recentActivities = computed(() => {
       : borrow.borrowDetails ? [borrow.borrowDetails] : []
 
     const itemName = borrowDetails[0]?.inventory?.name || 'Item tidak diketahui'
-    const userName = borrow.user?.username || 'Pengguna tidak diketahui'
+    const userName = isAdmin.value ? (borrow.user?.username || 'Pengguna tidak diketahui') : 'Anda'
 
     const timeDiff = currentTime.value - new Date(borrow.createdAt).getTime()
     const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60))
@@ -98,6 +160,20 @@ const topInventories = computed(() => {
   if (!borrows.value || !inventories.value)
     return []
 
+  // For regular users, show available inventories instead of top borrowed
+  if (!isAdmin.value) {
+    return inventories.value
+      .filter(inv => inv.quantity > 0) // Only show available items
+      .sort((a, b) => b.quantity - a.quantity) // Sort by availability
+      .slice(0, 5)
+      .map(inv => ({
+        name: inv.name,
+        borrows: 0, // Not applicable for regular users
+        available: inv.quantity,
+      }))
+  }
+
+  // For admin, show top borrowed inventories
   const inventoryBorrowCounts: Record<string, number> = {}
   borrows.value.forEach((borrow) => {
     const borrowDetails = Array.isArray(borrow.borrowDetails)
@@ -135,6 +211,16 @@ const userStats = computed(() => {
     }
   }
 
+  // Only admin sees user statistics
+  if (!isAdmin.value) {
+    return {
+      totalActive: 0,
+      newThisMonth: 0,
+      topBorrower: '',
+      topBorrowerCount: 0,
+    }
+  }
+
   const userBorrowCounts: Record<string, number> = {}
   borrows.value.forEach((borrow) => {
     const userName = borrow.user?.username
@@ -158,17 +244,25 @@ const userStats = computed(() => {
   }
 })
 
-const loading = computed(() => borrowsLoading.value || inventoriesLoading.value || usersLoading.value)
-const error = computed(() => borrowsError.value || inventoriesError.value || usersError.value)
+const loading = computed(() => loadingBorrows.value || loadingInventories.value || loadingUsers.value)
+const error = computed(() => errorBorrows.value || errorInventories.value || errorUsers.value)
 
 // Function to reload all dashboard data
 async function loadDashboardData() {
   try {
-    await Promise.all([
-      fetchBorrows(true),
-      fetchInventories(true),
-      fetchUsers(true),
-    ])
+    if (isAdmin.value) {
+      await Promise.all([
+        fetchBorrows(true),
+        fetchInventories(true),
+        fetchUsers(true),
+      ])
+    }
+    else {
+      await Promise.all([
+        fetchBorrows(true),
+        fetchInventories(true),
+      ])
+    }
   }
   catch (err) {
     console.error('Error loading dashboard data:', err)
@@ -299,7 +393,7 @@ definePageMeta({
         <Card>
           <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
-              Peminjaman Aktif
+              {{ isAdmin ? 'Peminjaman Aktif' : 'Peminjaman Saya' }}
             </CardTitle>
             <BookOpen class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -308,7 +402,7 @@ definePageMeta({
               {{ dashboardData.activeBorrows }}
             </div>
             <p class="text-xs text-muted-foreground">
-              Sedang dipinjam saat ini
+              {{ isAdmin ? 'Sedang dipinjam saat ini' : 'Sedang Anda pinjam' }}
             </p>
           </CardContent>
         </Card>
@@ -316,7 +410,7 @@ definePageMeta({
         <Card>
           <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
-              Menunggu Pengembalian
+              {{ isAdmin ? 'Menunggu Pengembalian' : 'Menunggu Kembali' }}
             </CardTitle>
             <Clock class="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -325,7 +419,7 @@ definePageMeta({
               {{ dashboardData.pendingReturns }}
             </div>
             <p class="text-xs text-muted-foreground">
-              Belum dikembalikan
+              {{ isAdmin ? 'Belum dikembalikan' : 'Belum Anda kembalikan' }}
             </p>
           </CardContent>
         </Card>
@@ -333,7 +427,7 @@ definePageMeta({
         <Card>
           <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle class="text-sm font-medium">
-              Terlambat
+              {{ isAdmin ? 'Terlambat' : 'Terlambat Saya' }}
             </CardTitle>
             <AlertCircle class="h-4 w-4 text-red-500" />
           </CardHeader>
@@ -342,7 +436,7 @@ definePageMeta({
               {{ dashboardData.overdueItems }}
             </div>
             <p class="text-xs text-muted-foreground">
-              Melewati batas waktu
+              {{ isAdmin ? 'Melewati batas waktu' : 'Melewati batas waktu' }}
             </p>
           </CardContent>
         </Card>
@@ -424,14 +518,14 @@ definePageMeta({
         <!-- Recent Activities -->
         <Card class="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Aktivitas Terbaru</CardTitle>
+            <CardTitle>{{ isAdmin ? 'Aktivitas Terbaru' : 'Aktivitas Saya' }}</CardTitle>
             <CardDescription>
-              Aktivitas peminjaman dan pengembalian terbaru
+              {{ isAdmin ? 'Aktivitas peminjaman dan pengembalian terbaru' : 'Aktivitas peminjaman dan pengembalian Anda' }}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div v-if="recentActivities.length === 0" class="py-8 text-center text-muted-foreground">
-              Belum ada aktivitas
+              {{ isAdmin ? 'Belum ada aktivitas' : 'Belum ada aktivitas Anda' }}
             </div>
             <div v-else class="space-y-4">
               <div
@@ -479,14 +573,6 @@ definePageMeta({
               <CheckCircle class="mr-2 h-4 w-4" />
               Kembalikan Item
             </Button>
-            <Button class="w-full justify-start" variant="outline" @click="navigateTo('/borrows')">
-              <Clock class="mr-2 h-4 w-4" />
-              Riwayat Peminjaman
-            </Button>
-            <Button class="w-full justify-start" variant="outline" @click="navigateTo('/inventories')">
-              <Package class="mr-2 h-4 w-4" />
-              Lihat Inventaris
-            </Button>
           </CardContent>
         </Card>
 
@@ -514,17 +600,17 @@ definePageMeta({
           </CardContent>
         </Card>
 
-        <!-- Top Inventories -->
+        <!-- Top Inventories / Available Inventories -->
         <Card class="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Inventaris Terpopuler</CardTitle>
+            <CardTitle>{{ isAdmin ? 'Inventaris Terpopuler' : 'Inventaris Tersedia' }}</CardTitle>
             <CardDescription>
-              Item yang paling sering dipinjam
+              {{ isAdmin ? 'Item yang paling sering dipinjam' : 'Item yang tersedia untuk dipinjam' }}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div v-if="topInventories.length === 0" class="py-8 text-center text-muted-foreground">
-              Belum ada data inventaris
+              {{ isAdmin ? 'Belum ada data inventaris' : 'Tidak ada inventaris tersedia' }}
             </div>
             <div v-else class="space-y-4">
               <div
@@ -541,7 +627,7 @@ definePageMeta({
                       {{ item.name }}
                     </p>
                     <p class="text-sm text-muted-foreground">
-                      {{ item.borrows }} kali dipinjam
+                      {{ isAdmin ? `${item.borrows} kali dipinjam` : `${item.available} unit tersedia` }}
                     </p>
                   </div>
                 </div>
