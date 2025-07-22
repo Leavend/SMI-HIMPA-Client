@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { useAuthUser } from '@/composables/useAuthUser'
 import { Activity, AlertCircle, BookOpen, Calendar, CheckCircle, Clock, Package, Users } from 'lucide-vue-next'
-import { computed, ref, onMounted, onUnmounted } from 'vue'
-import useBorrows from '~/composables/useBorrows'
-import useInventories from '~/composables/useInventories'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import useAdminBorrows from '~/composables/useAdminBorrows'
 import useAdminInventories from '~/composables/useAdminInventories'
 import useAdminUsers from '~/composables/useAdminUsers'
+import useBorrows from '~/composables/useBorrows'
+import useInventories from '~/composables/useInventories'
 
 // Get user data
 const user = useAuthUser()
@@ -37,7 +37,8 @@ if (isAdmin.value) {
   loadingUsers = adminUsers.loading
   errorUsers = adminUsers.error
   fetchUsers = adminUsers.fetchUsers
-} else {
+}
+else {
   // User: use user composables
   const userBorrows = useBorrows()
   borrows = userBorrows.borrows
@@ -254,7 +255,8 @@ async function loadDashboardData() {
         fetchInventories(true),
         fetchUsers(true),
       ])
-    } else {
+    }
+    else {
       // Untuk user biasa, cukup refresh inventories saja
       await fetchInventories(true)
     }

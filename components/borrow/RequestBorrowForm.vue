@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import type { DateRange } from 'radix-vue'
 import type { Inventory } from '~/components/inventories/data/schema'
+import BaseDateRangePicker from '@/components/base/DateRangePicker.vue'
 import { Button } from '@/components/ui/button'
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 
-import { CalendarDate, type DateValue, getLocalTimeZone, parseDate, toCalendarDate, today } from '@internationalized/date'
+import { Separator } from '@/components/ui/separator'
+import { type DateValue, parseDate, today } from '@internationalized/date'
 import { toTypedSchema } from '@vee-validate/zod'
 
 import { Loader2 } from 'lucide-vue-next'
@@ -47,17 +47,17 @@ interface BorrowFormValues {
 
 const borrowFormSchema = toTypedSchema(
   z.object({
-    inventoryId: z.string({ required_error: 'Please select an item' }).min(1),
-    quantity: z.number({ required_error: 'Quantity is required' })
-      .min(1, 'Quantity must be at least 1')
-      .max(100, 'Quantity cannot exceed 100'),
-    dateBorrow: z.string({ required_error: 'Borrow date is required' })
+    inventoryId: z.string({ required_error: 'Tolong pilih barang' }).min(1),
+    quantity: z.number({ required_error: 'Jumlah barang harus diisi' })
+      .min(1, 'Jumlah barang harus minimal 1')
+      .max(100, 'Jumlah barang tidak boleh melebihi 100'),
+    dateBorrow: z.string({ required_error: 'Tanggal pinjam harus diisi' })
       .refine(val => val && val.match(/^\d{4}-\d{2}-\d{2}$/), {
-        message: 'Invalid borrow date format. Use YYYY-MM-DD',
+        message: 'Format tanggal pinjam tidak valid. Gunakan format YYYY-MM-DD',
       }),
-    dateReturn: z.string({ required_error: 'Return date is required' })
+    dateReturn: z.string({ required_error: 'Tanggal kembali harus diisi' })
       .refine(val => val && val.match(/^\d{4}-\d{2}-\d{2}$/), {
-        message: 'Invalid return date format. Use YYYY-MM-DD',
+        message: 'Format tanggal kembali tidak valid. Gunakan format YYYY-MM-DD',
       }),
   }).refine(
     (data) => {
@@ -71,7 +71,7 @@ const borrowFormSchema = toTypedSchema(
       }
     },
     {
-      message: 'Return date must be on or after borrow date',
+      message: 'Tanggal kembali harus setelah tanggal pinjam',
       path: ['dateReturn'],
     },
   ),
@@ -86,25 +86,52 @@ const borrowForm = useForm<BorrowFormValues>({
   } as BorrowFormValues,
 })
 
-const dateRangePickerValue = ref<DateRange>()
+// Use CalendarDate for today
+// Corrected line
+const dateRangePickerValue = ref<{ start?: DateValue, end?: DateValue }>({
+  start: today('gregory'),
+  end: today('gregory').add({ days: 7 }),
+})
+const maxLoanWarning = ref('')
+const isMaxLoanExceeded = ref(false)
 
-function formatCalendarDate(dateInput: DateValue | CalendarDate | undefined): string | undefined {
-  if (!dateInput) {
+function formatCalendarDate(dateInput: DateValue | undefined): string | undefined {
+  if (!dateInput)
     return undefined
-  }
-  const calDate = (dateInput instanceof CalendarDate) ? dateInput : toCalendarDate(dateInput)
-  return `${calDate.year}-${String(calDate.month).padStart(2, '0')}-${String(calDate.day).padStart(2, '0')}`
+  // CalendarDate has toString() in YYYY-MM-DD format
+  return dateInput.toString()
 }
 
 watch(dateRangePickerValue, (newRange) => {
-  const startDateStr = formatCalendarDate(newRange?.start)
-  const endDateStr = formatCalendarDate(newRange?.end)
+  // Directly use .toString() to avoid type issues with reactive proxies
+  const startDateStr = newRange?.start?.toString() ?? ''
+  const endDateStr = newRange?.end?.toString() ?? ''
 
-  borrowForm.setFieldValue('dateBorrow', startDateStr || '')
-  borrowForm.setFieldValue('dateReturn', endDateStr || '')
+  borrowForm.setFieldValue('dateBorrow', startDateStr)
+  borrowForm.setFieldValue('dateReturn', endDateStr)
 
   borrowForm.validateField('dateBorrow')
   borrowForm.validateField('dateReturn')
+
+  // The rest of your watch function logic remains the same...
+  if (newRange?.start && newRange?.end) {
+    const start = new Date(newRange.start.toString())
+    const end = new Date(newRange.end.toString())
+    const diffTime = end.getTime() - start.getTime()
+    const diffDays = diffTime / (1000 * 3600 * 24) + 1 // +1 to include both start and end
+    if (diffDays > 14) {
+      maxLoanWarning.value = 'Maksimal masa pinjam adalah 14 hari.'
+      isMaxLoanExceeded.value = true
+    }
+    else {
+      maxLoanWarning.value = ''
+      isMaxLoanExceeded.value = false
+    }
+  }
+  else {
+    maxLoanWarning.value = ''
+    isMaxLoanExceeded.value = false
+  }
 }, { deep: true })
 
 onMounted(async () => {
@@ -117,7 +144,7 @@ onMounted(async () => {
         borrowForm.setFieldValue('inventoryId', props.itemId)
       }
       else {
-        toast.warning('Selected item not found')
+        toast.warning('Barang tidak ditemukan')
       }
     }
 
@@ -135,18 +162,18 @@ onMounted(async () => {
       }
       catch (e) {
         console.error('Error parsing initial dates for DateRangePicker:', e)
-        const now = today(getLocalTimeZone())
+        const now = today('gregory')
         dateRangePickerValue.value = {
-          start: toCalendarDate(now),
-          end: toCalendarDate(now.add({ days: 7 })),
+          start: now,
+          end: now.add({ days: 7 }),
         }
       }
     }
     else {
-      const now = today(getLocalTimeZone())
+      const now = today('gregory')
       dateRangePickerValue.value = {
-        start: toCalendarDate(now),
-        end: toCalendarDate(now.add({ days: 7 })),
+        start: now,
+        end: now.add({ days: 7 }),
       }
     }
   }
@@ -200,22 +227,26 @@ const conditionClass = computed(() => {
 })
 
 const onSubmit = borrowForm.handleSubmit(async (values) => {
+  if (isMaxLoanExceeded.value) {
+    toast.error('Maksimal masa pinjam adalah 14 hari.')
+    return
+  }
   if (!values.dateBorrow || !values.dateReturn || !values.dateBorrow.match(/^\d{4}-\d{2}-\d{2}$/) || !values.dateReturn.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    toast.error('Please select a valid borrow and return date range.')
+    toast.error('Tolong pilih rentang tanggal pinjam dan kembali yang valid.')
     borrowForm.validateField('dateBorrow')
     borrowForm.validateField('dateReturn')
     return
   }
 
   if (new Date(values.dateReturn) < new Date(values.dateBorrow)) {
-    toast.error('Return date must be on or after borrow date.')
-    borrowForm.setFieldError('dateReturn', 'Return date must be on or after borrow date.')
+    toast.error('Tanggal kembali harus setelah tanggal pinjam.')
+    borrowForm.setFieldError('dateReturn', 'Tanggal kembali harus setelah tanggal pinjam.')
     return
   }
 
   const adminIdToAssign = getRandomAdmin()
   if (!adminIdToAssign) {
-    toast.error('Failed to assign an admin. Please contact support or try again later.')
+    toast.error('Gagal menugaskan admin. Silakan hubungi dukungan atau coba lagi nanti.')
     return
   }
 
@@ -227,21 +258,26 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
     }
 
     if (!payload.userId) {
-      toast.error('User information is missing. Please log in again.')
+      toast.error('Informasi pengguna tidak ditemukan. Silakan login kembali.')
       return
     }
 
     emit('submit', payload)
-    toast.success('Borrow request submitted!')
+    toast.success('Permintaan pinjam berhasil dikirim!')
     // borrowForm.resetForm();
     // dateRangePickerValue.value = undefined;
   }
   catch (error) {
-    toast.error('Failed to submit request', {
-      description: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again later.',
+    toast.error('Gagal mengirim permintaan', {
+      description: error instanceof Error ? error.message : 'Terjadi kesalahan tak terduga. Silakan coba lagi nanti.',
     })
   }
 })
+
+function isDateBeforeToday(date: DateValue) {
+  const todayDate = today('gregory')
+  return date.compare(todayDate) < 0
+}
 </script>
 
 <template>
@@ -340,8 +376,12 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
             class="w-full"
             :number-of-months="1"
             placeholder="Pilih tanggal pinjam dan kembali"
+            :is-date-disabled="isDateBeforeToday"
           />
         </FormControl>
+        <p v-if="maxLoanWarning" class="mt-1 text-sm text-red-600">
+          {{ maxLoanWarning }}
+        </p>
         <div class="mt-1 text-sm">
           <FormMessage name="dateBorrow" />
           <FormMessage name="dateReturn" />
@@ -349,7 +389,7 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
       </FormItem>
     </FormField>
 
-    <Button type="submit" class="w-full" :disabled="props.isLoading || !selectedItem || !borrowForm.meta.value.valid">
+    <Button type="submit" class="w-full" :disabled="props.isLoading || !selectedItem || !borrowForm.meta.value.valid || isMaxLoanExceeded">
       <Loader2 v-if="props.isLoading" class="mr-2 h-4 w-4 animate-spin" />
       <span v-else>Pinjam Barang</span>
     </Button>
