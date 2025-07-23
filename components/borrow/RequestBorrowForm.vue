@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 import { Separator } from '@/components/ui/separator'
-// 1. Impor `DateValue` untuk tipe data yang benar
-import { type DateValue, parseDate, today } from '@internationalized/date'
+// 1. Impor `getLocalTimeZone`
+import { type DateValue, getLocalTimeZone, parseDate, today } from '@internationalized/date'
 import { toTypedSchema } from '@vee-validate/zod'
 
 import { Loader2 } from 'lucide-vue-next'
@@ -152,7 +152,8 @@ onMounted(async () => {
       }
     }
     else {
-      const now = today('gregory')
+      // 2. Gunakan getLocalTimeZone()
+      const now = today(getLocalTimeZone())
       dateRangePickerValue.value = {
         start: now,
         end: now.add({ days: 7 }),
@@ -169,7 +170,6 @@ onMounted(async () => {
         case '500 Internal Server Error': userFriendlyMessage = 'Server sedang mengalami masalah. Silakan coba lagi nanti.'; break
       }
     }
-    // 2. Gunakan variabel dengan menghapus komentar pada baris ini
     toast.error(userFriendlyMessage)
     console.error('Error in onMounted:', error)
   }
@@ -256,7 +256,7 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
 })
 
 // 3. Perbaiki fungsi isDateBeforeToday agar sesuai dengan tipe data kalender
-const dateToday = today('gregory')
+const dateToday = today(getLocalTimeZone())
 function isDateBeforeToday(date: DateValue) {
   return date.compare(dateToday) < 0
 }
@@ -301,7 +301,7 @@ function isDateBeforeToday(date: DateValue) {
       </FormItem>
     </FormField>
 
-    <div v-if="selectedItem" class="grid grid-cols-2 gap-4 border rounded-lg p-4">
+    <div v-if="selectedItem" class="grid grid-cols-2 gap-4 rounded-lg border p-4">
       <div>
         <p class="text-sm font-medium">
           Nama Barang
