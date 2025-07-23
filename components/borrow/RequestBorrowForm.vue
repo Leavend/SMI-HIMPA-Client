@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DateRange } from 'radix-vue'
 import type { Inventory } from '~/components/inventories/data/schema'
 import BaseDateRangePicker from '@/components/base/DateRangePicker.vue'
 import { Button } from '@/components/ui/button'
@@ -7,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 import { Separator } from '@/components/ui/separator'
+// 1. Impor `DateValue` untuk tipe data yang benar
 import { type DateValue, parseDate, today } from '@internationalized/date'
 import { toTypedSchema } from '@vee-validate/zod'
 
@@ -86,26 +88,21 @@ const borrowForm = useForm<BorrowFormValues>({
   } as BorrowFormValues,
 })
 
-// Use CalendarDate for today
-// Corrected line
-const dateRangePickerValue = ref<{ start?: DateValue, end?: DateValue }>({
-  start: today('gregory'),
-  end: today('gregory').add({ days: 7 }),
-})
+const dateRangePickerValue = ref<DateRange>({ start: undefined, end: undefined })
 const maxLoanWarning = ref('')
 const isMaxLoanExceeded = ref(false)
 
-function formatCalendarDate(dateInput: DateValue | undefined): string | undefined {
-  if (!dateInput)
-    return undefined
-  // CalendarDate has toString() in YYYY-MM-DD format
-  return dateInput.toString()
-}
+function toCalendarDate(val: any) {
+  if (val && typeof val.toCalendar === 'function')
+    return val.toCalendar('gregory')
 
+  return val
+}
 watch(dateRangePickerValue, (newRange) => {
-  // Directly use .toString() to avoid type issues with reactive proxies
-  const startDateStr = newRange?.start?.toString() ?? ''
-  const endDateStr = newRange?.end?.toString() ?? ''
+  const start = toCalendarDate(newRange?.start)
+  const end = toCalendarDate(newRange?.end)
+  const startDateStr = start ? start.toString() : ''
+  const endDateStr = end ? end.toString() : ''
 
   borrowForm.setFieldValue('dateBorrow', startDateStr)
   borrowForm.setFieldValue('dateReturn', endDateStr)
@@ -113,12 +110,9 @@ watch(dateRangePickerValue, (newRange) => {
   borrowForm.validateField('dateBorrow')
   borrowForm.validateField('dateReturn')
 
-  // The rest of your watch function logic remains the same...
-  if (newRange?.start && newRange?.end) {
-    const start = new Date(newRange.start.toString())
-    const end = new Date(newRange.end.toString())
-    const diffTime = end.getTime() - start.getTime()
-    const diffDays = diffTime / (1000 * 3600 * 24) + 1 // +1 to include both start and end
+  if (start && end) {
+    const diffTime = new Date(end.toString()).getTime() - new Date(start.toString()).getTime()
+    const diffDays = diffTime / (1000 * 3600 * 24) + 1
     if (diffDays > 14) {
       maxLoanWarning.value = 'Maksimal masa pinjam adalah 14 hari.'
       isMaxLoanExceeded.value = true
@@ -140,12 +134,10 @@ onMounted(async () => {
 
     if (props.itemId) {
       const itemExists = inventories.value.some(i => i.inventoryId === props.itemId)
-      if (itemExists) {
+      if (itemExists)
         borrowForm.setFieldValue('inventoryId', props.itemId)
-      }
-      else {
+      else
         toast.warning('Barang tidak ditemukan')
-      }
     }
 
     const initialDateBorrow = borrowForm.values.dateBorrow
@@ -154,19 +146,9 @@ onMounted(async () => {
     if (initialDateBorrow && initialDateReturn
       && initialDateBorrow.match(/^\d{4}-\d{2}-\d{2}$/)
       && initialDateReturn.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      try {
-        dateRangePickerValue.value = {
-          start: parseDate(initialDateBorrow),
-          end: parseDate(initialDateReturn),
-        }
-      }
-      catch (e) {
-        console.error('Error parsing initial dates for DateRangePicker:', e)
-        const now = today('gregory')
-        dateRangePickerValue.value = {
-          start: now,
-          end: now.add({ days: 7 }),
-        }
+      dateRangePickerValue.value = {
+        start: parseDate(initialDateBorrow),
+        end: parseDate(initialDateReturn),
       }
     }
     else {
@@ -187,6 +169,7 @@ onMounted(async () => {
         case '500 Internal Server Error': userFriendlyMessage = 'Server sedang mengalami masalah. Silakan coba lagi nanti.'; break
       }
     }
+    // 2. Gunakan variabel dengan menghapus komentar pada baris ini
     toast.error(userFriendlyMessage)
     console.error('Error in onMounted:', error)
   }
@@ -194,9 +177,9 @@ onMounted(async () => {
 
 function getRandomAdmin(): string {
   const admins = users.value.filter(user => user.role === 'ADMIN')
-  if (admins.length === 0) {
+  if (admins.length === 0)
     return ''
-  }
+
   return admins[Math.floor(Math.random() * admins.length)].userId
 }
 
@@ -264,8 +247,6 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
 
     emit('submit', payload)
     toast.success('Permintaan pinjam berhasil dikirim!')
-    // borrowForm.resetForm();
-    // dateRangePickerValue.value = undefined;
   }
   catch (error) {
     toast.error('Gagal mengirim permintaan', {
@@ -274,9 +255,10 @@ const onSubmit = borrowForm.handleSubmit(async (values) => {
   }
 })
 
+// 3. Perbaiki fungsi isDateBeforeToday agar sesuai dengan tipe data kalender
+const dateToday = today('gregory')
 function isDateBeforeToday(date: DateValue) {
-  const todayDate = today('gregory')
-  return date.compare(todayDate) < 0
+  return date.compare(dateToday) < 0
 }
 </script>
 

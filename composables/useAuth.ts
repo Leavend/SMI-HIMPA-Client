@@ -128,6 +128,8 @@ export function useAuth() {
     userStorage.value = null
     token.value = ''
     authUser.value = null
+
+    localStorage.clear()
     navigateTo('/')
   }
 

@@ -1,43 +1,62 @@
 <script setup lang="ts">
 import { columns } from '@/components/borrows/components/columns'
 import DataTable from '@/components/borrows/components/DataTable.vue'
+import { computed, onMounted, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 // Ambil composable
 const { borrows, loading, error, fetchBorrows } = useAdminBorrows()
+const authUserCookie = useAuthUser()
 
-onMounted(async () => {
-  const token = useToken().value
-  if (!token) {
-    toast.error('Token tidak tersedia. Harap login ulang.')
-    return
+// ambil role user dari cookie
+const userRole = computed(() => {
+  return authUserCookie.value?.role || null
+})
+
+const errorMessage = computed(() => {
+  if (!error.value)
+    return null
+  if (error.value !== null && error.value !== undefined && (error.value as any) instanceof Error)
+    return (error.value as any).message
+  if (typeof error.value === 'string')
+    return error.value
+  if (error.value && typeof (error.value as any).message === 'string')
+    return (error.value as any).message
+  return 'Tidak dapat memuat data.'
+})
+
+async function loadBorrows() {
+  // jika role user bukan admin, redirect ke halaman lain
+  if (userRole.value !== 'ADMIN') {
+    navigateTo('/')
   }
 
-  const storedBorrows = localStorage.getItem('admin_borrows')
-  if (storedBorrows) {
-    try {
-      const parsed = JSON.parse(storedBorrows)
-
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        borrows.value = parsed
-        loading.value = false
-        toast.success('Data peminjaman berhasil dimuat dari cache.')
-      }
-      else {
-        throw new Error('Cache kosong atau tidak valid')
-      }
-    }
-    catch (e) {
-      console.error('Error parsing borrows from localStorage:', e)
-      toast.error('Terjadi kesalahan saat memuat data dari cache. Memuat data dari server...')
-      // Jika terjadi error saat parsing, panggil fetchBorrows untuk mendapatkan data dari server
-      await fetchBorrows(true) // forceFetch = true agar selalu mengambil data terbaru
-    }
+  try {
+    await fetchBorrows()
   }
-  else {
-  // Jika tidak ada di localStorage, langsung fetch data
-    toast.info('Memuat data peminjaman dari server...')
-    await fetchBorrows(true) // forceFetch = true agar selalu mengambil data terbaru
+  catch (err) {
+    console.error('Gagal memuat data pengembalian:', err)
+  }
+  finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadBorrows()
+})
+
+watch(userRole, (newRole, oldRole) => {
+  if (newRole && newRole !== oldRole) {
+    loadBorrows()
+  }
+}, { immediate: true })
+
+watch(error, (newError) => {
+  if (newError) {
+    const messageToDisplay = errorMessage.value || 'Terjadi kesalahan.'
+    toast.error(messageToDisplay)
+    error.value = null
   }
 })
 </script>

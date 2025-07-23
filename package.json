@@ -45,7 +45,9 @@
     "@unovis/ts": "^1.5.0",
     "@unovis/vue": "^1.5.0",
     "embla-carousel": "^8.5.1",
-    "embla-carousel-vue": "^8.5.1"
+    "embla-carousel-vue": "^8.5.1",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.12.0",
@@ -59,6 +61,8 @@
     "@nuxthub/core": "^0.8.27",
     "@nuxtjs/color-mode": "^3.5.2",
     "@pinia/nuxt": "^0.5.1",
+    "@types/jspdf": "^2.0.0",
+    "@types/xlsx": "^0.0.36",
     "@unocss/eslint-plugin": "^0.65.2",
     "@unocss/nuxt": "^0.65.2",
     "@vee-validate/zod": "^4.15.0",

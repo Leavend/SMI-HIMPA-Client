@@ -14,7 +14,7 @@ interface FetchReturnsResponse {
 
 const CACHE_KEY = 'returns_user'
 const CACHE_TIMESTAMP_KEY = 'returns_user_cache_timestamp'
-const CACHE_DURATION_MS = 5 * 60 * 1000 // 5 menit
+const CACHE_DURATION_MS = 0.5 * 60 * 1000
 
 export default function useReturns() {
   const returns = ref<Return[]>([])

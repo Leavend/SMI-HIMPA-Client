@@ -39,7 +39,7 @@ interface UpdateInventoryGeneralResponse {
 // --- Konfigurasi Cache ---
 const CACHE_KEY = 'admin_inventories'
 const CACHE_TIMESTAMP_KEY = 'admin_inventories_cache_timestamp'
-const CACHE_DURATION_MS = 5 * 60 * 1000 // 5 menit (sesuaikan jika perlu)
+const CACHE_DURATION_MS = 0.5 * 60 * 1000 // 5 menit (sesuaikan jika perlu)
 
 // --- Fungsi Helper Error Message ---
 function getErrorMessage(err: any, defaultMessage: string): string {

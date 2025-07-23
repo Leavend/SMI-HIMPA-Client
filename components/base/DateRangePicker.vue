@@ -45,7 +45,7 @@ const now = today(getLocalTimeZone())
             </template>
           </template>
           <template v-else>
-            Pick a date
+            Pilih tanggal
           </template>
         </Button>
       </PopoverTrigger>
@@ -57,7 +57,6 @@ const now = today(getLocalTimeZone())
           initial-focus
           :placeholder="now"
           :is-date-disabled="props.isDateDisabled"
-          @update:model-value="(updatedValue: DateRange | undefined) => {}"
         />
       </PopoverContent>
     </Popover>

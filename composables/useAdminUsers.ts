@@ -24,7 +24,7 @@ interface UpdateRoleUserResponse {
 
 const CACHE_KEY = 'admin_users' // Ubah nama cache key agar unik untuk admin users
 const CACHE_TIMESTAMP_KEY = 'admin_users_cache_timestamp'
-const CACHE_DURATION_MS = 5 * 60 * 1000 // 5 menit (sesuaikan jika perlu)
+const CACHE_DURATION_MS = 0.5 * 60 * 1000 // 5 menit (sesuaikan jika perlu)
 
 // --- Fungsi Helper Error Message ---
 function getErrorMessage(err: any, defaultMessage: string): string {
