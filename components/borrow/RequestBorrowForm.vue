@@ -301,7 +301,7 @@ function isDateBeforeToday(date: DateValue) {
       </FormItem>
     </FormField>
 
-    <div v-if="selectedItem" class="grid grid-cols-2 gap-4 rounded-lg border p-4">
+    <div v-if="selectedItem" class="grid grid-cols-2 gap-4 border rounded-lg p-4">
       <div>
         <p class="text-sm font-medium">
           Nama Barang

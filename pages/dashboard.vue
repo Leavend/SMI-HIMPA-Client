@@ -49,6 +49,7 @@ async function loadDashboardData() {
       fetchAdminBorrows(true),
       fetchAdminInventories(true),
       fetchUsers(true),
+      fetchReturnsByUserId(null, true),
     ])
   }
   else if (userId.value) {
@@ -74,7 +75,20 @@ const dashboardData = computed(() => {
     activeBorrows: borrows.value?.filter(b => b.status === 'ACTIVE').length || 0,
     pendingBorrows: borrows.value?.filter(b => b.status === 'PENDING').length || 0,
     todayBorrows: borrows.value?.filter(b => b.dateBorrow?.startsWith(today)).length || 0,
-    overdueItems: borrows.value?.filter(b => b.status === 'ACTIVE' && b.dateReturn && new Date(b.dateReturn) < new Date()).length || 0,
+    overdueItems: computed(() => {
+      if (!borrows.value || !returns.value)
+        return 0
+
+      // 1. Buat daftar ID semua peminjaman yang sudah dikembalikan.
+      const returnedBorrowIds = new Set(returns.value.map(r => r.borrowId))
+
+      // 2. Filter peminjaman yang belum dikembalikan DAN sudah lewat tanggalnya.
+      return borrows.value.filter((b) => {
+        const hasBeenReturned = returnedBorrowIds.has(b.borrowId)
+        const isOverdue = b.dateReturn && new Date(b.dateReturn) < new Date()
+        return !hasBeenReturned && isOverdue
+      }).length
+    }),
     completedReturns: returns.value?.length || 0, // Menggunakan data returns yang sudah benar
     totalBorrows: borrows.value?.length || 0,
   }
