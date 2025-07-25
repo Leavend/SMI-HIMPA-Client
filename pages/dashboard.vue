@@ -36,9 +36,25 @@ const loading = computed(() => {
 })
 
 const error = computed(() => {
-  if (isAdmin.value)
+  if (isAdmin.value) {
+    // Logika untuk admin tidak berubah
     return errorAdminBorrows.value || errorAdminInventories.value || errorUsers.value
-  return errorUserBorrows.value || errorPublicInventories.value || errorReturns.value
+  }
+
+  // --- PERBAIKAN UNTUK BORROWER ---
+
+  // 1. Cek error peminjaman, abaikan jika '404'
+  const borrowError = errorUserBorrows.value && !String(errorUserBorrows.value).includes('404')
+    ? errorUserBorrows.value
+    : null
+
+  // 2. Cek error pengembalian, abaikan jika 'tidak ditemukan' atau '404'
+  const returnError = errorReturns.value && !(String(errorReturns.value).includes('404') || String(errorReturns.value).includes('tidak ditemukan'))
+    ? errorReturns.value
+    : null
+
+  // Gabungkan hanya dengan error yang benar-benar fatal
+  return borrowError || returnError || errorPublicInventories.value
 })
 
 // --- 3. Fungsi Terpusat untuk Memuat Data ---
